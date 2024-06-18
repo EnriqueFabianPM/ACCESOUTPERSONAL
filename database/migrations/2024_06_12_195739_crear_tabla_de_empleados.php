@@ -13,6 +13,15 @@ return new class extends Migration
     {
         Schema::create('empleados', function (Blueprint $table) {
             $table->id();
+            $table->string('Fotoqr')->nullable();
+            $table->string('Foto')->nullable();
+            $table->unsignedBigInteger('identificador');
+            $table->string('nombre');
+            $table->string('apellidos');
+            $table->string('telefono');
+            $table->string('email')->unique();
+            $table->datetime('entrada')->nullable();
+            $table->datetime('salida')->nullable();
             $table->timestamps();
         });
     }

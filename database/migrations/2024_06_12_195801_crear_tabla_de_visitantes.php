@@ -13,6 +13,14 @@ return new class extends Migration
     {
         Schema::create('visitantes', function (Blueprint $table) {
             $table->id();
+            $table->string('Fotoqr')->nullable();
+            $table->string('nombre');
+            $table->string('apellidos');
+            $table->string('motivo');
+            $table->string('telefono');
+            $table->string('email')->unique();
+            $table->datetime('entrada')->nullable();
+            $table->datetime('salida')->nullable();
             $table->timestamps();
         });
     }
