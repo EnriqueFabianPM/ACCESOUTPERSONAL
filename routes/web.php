@@ -7,4 +7,4 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::resource('estudiante', ControladorEstudiante::class);
+Route::resource('estudiantes', ControladorEstudiante::class);

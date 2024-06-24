@@ -20,6 +20,6 @@ class Estudiante extends Model
         'grupo',
         'email',
         'entrada',
-        'salida',
+        'salida'
     ];
 }
