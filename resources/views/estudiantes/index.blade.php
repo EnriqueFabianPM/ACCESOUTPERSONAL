@@ -35,8 +35,8 @@
                                 @foreach($estudiantes as $estudiante)
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
-                                    <td><img src="/ImagenesQREstudiantes/{{ $estudiante->Fotoqr }}" width="100px"></td>
-                                    <td><img src="/FotosEstudiantes/{{ $estudiante->Foto }}<" width="100px"></td>
+                                    <td><img src="{{ asset('ImagenesQREstudiantes/' . $estudiante->Fotoqr) }}" width="100px"></td>
+                                    <td><img src="{{ asset('FotosEstudiantes/' . $estudiante->Foto) }}" width="100px"></td>
                                     <td>{{ $estudiante->identificador }}</td>
                                     <td>{{ $estudiante->nombre }}</td>
                                     <td>{{ $estudiante->apellidos }}</td>

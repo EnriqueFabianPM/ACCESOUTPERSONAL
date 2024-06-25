@@ -14,11 +14,11 @@
             <table class="table table-bordered">
                 <tr>
                     <th>Foto de Estudiante: </th>
-                    <td><img src="/FotosEstudiantes/{{ $estudiante->Foto }}<" width="500px" height="10000px"></td>
+                    <td><img src="{{ asset('FotosEstudiantes/' . $estudiante->Foto) }}" width="500px" height="auto"></td>
                 </tr>
                 <tr>
                     <th>imagen de Codigo QR: </th>
-                    <td><img src="/ImagenesQREstudiantes/{{ $estudiante->Fotoqr }}" width="100px"></td>
+                    <td><img src="{{ asset('ImagenesQREstudiantes/' . $estudiante->Fotoqr) }}" width="100px"></td>
                 </tr>
                 <tr>
                     <th>Identificador: </th>

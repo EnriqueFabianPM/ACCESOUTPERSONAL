@@ -6,6 +6,7 @@ use App\Models\Estudiante;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Storage;
 
 class ControladorEstudiante extends Controller
 {
@@ -23,8 +24,8 @@ class ControladorEstudiante extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validatedData = $request->validate([
-            'Fotoqr' => 'nullable|image|max:2048', // Adjust validation rules as needed
-            'Foto' => 'nullable|image|max:2048',
+            'Fotoqr' => 'nullable|image|max:2048', // Adjusted to image validation
+            'Foto' => 'nullable|image|max:2048',   // Adjusted to image validation
             'identificador' => 'required|string|max:255',
             'nombre' => 'required|string|max:255',
             'apellidos' => 'required|string|max:255',
@@ -34,6 +35,7 @@ class ControladorEstudiante extends Controller
             'entrada' => 'nullable|date',
             'salida' => 'nullable|date',
         ]);
+
         // Handle Fotoqr upload
         if ($request->hasFile('Fotoqr')) {
             $path = $request->file('Fotoqr')->store('ImagenesQREstudiantes', 'public');
@@ -42,15 +44,14 @@ class ControladorEstudiante extends Controller
     
         // Handle Foto upload
         if ($request->hasFile('Foto')) {
-        $path = $request->file('Foto')->store('FotosEstudiantes', 'public');
-        $validatedData['Foto'] = $path;
+            $path = $request->file('Foto')->store('FotosEstudiantes', 'public');
+            $validatedData['Foto'] = $path;
         }
 
         Estudiante::create($validatedData);
 
         return redirect()->route('estudiantes.index')->with('flash_message', 'Estudiante dado de alta exitósamente!');
-}
-
+    }
 
     public function show(Estudiante $estudiante): View
     {
@@ -65,8 +66,8 @@ class ControladorEstudiante extends Controller
     public function update(Request $request, Estudiante $estudiante): RedirectResponse
     {
         $validatedData = $request->validate([
-            'Fotoqr' => 'nullable|image|max:2048', // Adjust validation rules as needed
-            'Foto' => 'nullable|image|max:2048',
+            'Fotoqr' => 'nullable|image|max:2048', // Adjusted to image validation
+            'Foto' => 'nullable|image|max:2048',   // Adjusted to image validation
             'identificador' => 'required|string|max:255',
             'nombre' => 'required|string|max:255',
             'apellidos' => 'required|string|max:255',
@@ -84,8 +85,8 @@ class ControladorEstudiante extends Controller
     
         // Handle Foto upload
         if ($request->hasFile('Foto')) {
-        $path = $request->file('Foto')->store('FotosEstudiantes', 'public');
-        $validatedData['Foto'] = $path;
+            $path = $request->file('Foto')->store('FotosEstudiantes', 'public');
+            $validatedData['Foto'] = $path;
         }
 
         $estudiante->update($validatedData);
@@ -96,6 +97,6 @@ class ControladorEstudiante extends Controller
     public function destroy(Estudiante $estudiante): RedirectResponse
     {
         $estudiante->delete();
-        return redirect('estudiante')->with('flash_message', 'Registro de estudiante eliminado exitósamente!');
+        return redirect()->route('estudiantes.index')->with('flash_message', 'Registro de estudiante eliminado exitósamente!');
     }
 }
