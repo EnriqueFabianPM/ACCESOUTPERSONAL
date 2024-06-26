@@ -12,7 +12,7 @@ class ControladorEstudiante extends Controller
 {
     public function index(): View
     {
-        $estudiantes = Estudiante::all();
+        $estudiantes = Estudiante::paginate(10); // Ejemplo: paginar cada 10 resultados
         return view('estudiantes.index', compact('estudiantes'));
     }
 
@@ -24,8 +24,8 @@ class ControladorEstudiante extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validatedData = $request->validate([
-            'Fotoqr' => 'nullable|image|max:2048', // Adjusted to image validation
-            'Foto' => 'nullable|image|max:2048',   // Adjusted to image validation
+            'Fotoqr' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Adjusted to image validation
+            'Foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',   // Adjusted to image validation
             'identificador' => 'required|string|max:255',
             'nombre' => 'required|string|max:255',
             'apellidos' => 'required|string|max:255',
@@ -38,14 +38,18 @@ class ControladorEstudiante extends Controller
 
         // Handle Fotoqr upload
         if ($request->hasFile('Fotoqr')) {
-            $path = $request->file('Fotoqr')->store('ImagenesQREstudiantes', 'public');
-            $validatedData['Fotoqr'] = $path;
+            $imagenQR = $request->file('Fotoqr');
+            $nombreImagenQR = time() . '_' . $imagenQR->getClientOriginalName();
+            $rutaImagenQR = $imagenQR->move(public_path('ImagenesQREstudiantes'), $nombreImagenQR);
+            $validatedData['Fotoqr'] = 'ImagenesQREstudiantes/' . $nombreImagenQR;
         }
     
         // Handle Foto upload
         if ($request->hasFile('Foto')) {
-            $path = $request->file('Foto')->store('FotosEstudiantes', 'public');
-            $validatedData['Foto'] = $path;
+            $imagen = $request->file('Foto');
+            $nombreImagen = time() . '_' . $imagen->getClientOriginalName();
+            $rutaImagen = $imagen->move(public_path('FotosEstudiantes'), $nombreImagen);
+            $validatedData['Foto'] = 'FotosEstudiantes/' . $nombreImagen;
         }
 
         Estudiante::create($validatedData);
@@ -66,8 +70,8 @@ class ControladorEstudiante extends Controller
     public function update(Request $request, Estudiante $estudiante): RedirectResponse
     {
         $validatedData = $request->validate([
-            'Fotoqr' => 'nullable|image|max:2048', // Adjusted to image validation
-            'Foto' => 'nullable|image|max:2048',   // Adjusted to image validation
+            'Fotoqr' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Adjusted to image validation
+            'Foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',   // Adjusted to image validation
             'identificador' => 'required|string|max:255',
             'nombre' => 'required|string|max:255',
             'apellidos' => 'required|string|max:255',
@@ -79,14 +83,18 @@ class ControladorEstudiante extends Controller
         ]);
         // Handle Fotoqr upload
         if ($request->hasFile('Fotoqr')) {
-            $path = $request->file('Fotoqr')->store('ImagenesQREstudiantes', 'public');
-            $validatedData['Fotoqr'] = $path;
+            $imagenQR = $request->file('Fotoqr');
+            $nombreImagenQR = time() . '_' . $imagenQR->getClientOriginalName();
+            $rutaImagenQR = $imagenQR->move(public_path('ImagenesQREstudiantes'), $nombreImagenQR);
+            $validatedData['Fotoqr'] = 'ImagenesQREstudiantes/' . $nombreImagenQR;
         }
     
         // Handle Foto upload
         if ($request->hasFile('Foto')) {
-            $path = $request->file('Foto')->store('FotosEstudiantes', 'public');
-            $validatedData['Foto'] = $path;
+            $imagen = $request->file('Foto');
+            $nombreImagen = time() . '_' . $imagen->getClientOriginalName();
+            $rutaImagen = $imagen->move(public_path('FotosEstudiantes'), $nombreImagen);
+            $validatedData['Foto'] = 'FotosEstudiantes/' . $nombreImagen;
         }
 
         $estudiante->update($validatedData);
