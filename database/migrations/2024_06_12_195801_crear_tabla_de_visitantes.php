@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('visitantes', function (Blueprint $table) {
             $table->id();
             $table->string('Fotoqr')->nullable();
+            $table->unsignedBigInteger('identificador');
             $table->string('nombre');
             $table->string('apellidos');
             $table->string('motivo');

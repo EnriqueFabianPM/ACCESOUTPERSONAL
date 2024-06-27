@@ -6,7 +6,6 @@ use App\Models\Estudiante;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
-use Illuminate\Support\Facades\Storage;
 
 class ControladorEstudiante extends Controller
 {
