@@ -15,6 +15,7 @@ class Empleado extends Model
         'identificador',
         'nombre',
         'apellidos',
+        'areatrabajo',
         'telefono',
         'email',
         'entrada',

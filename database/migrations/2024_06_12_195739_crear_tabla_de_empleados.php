@@ -18,6 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('identificador');
             $table->string('nombre');
             $table->string('apellidos');
+            $table->string('areatrabajo');
             $table->string('telefono');
             $table->string('email')->unique();
             $table->datetime('entrada')->nullable();

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Visitante extends Model
 {
-    protected $table = 'empleados';
+    protected $table = 'visitantes';
     protected $primaryKey = 'id';
     protected $fillable = [
         'Fotoqr',
