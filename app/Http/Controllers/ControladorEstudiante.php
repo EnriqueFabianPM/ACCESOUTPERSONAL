@@ -6,6 +6,9 @@ use App\Models\Estudiante;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use SimpleSoftwareIO\QrCode\Facades\QrCode; // Import the QrCode facade
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Route;
 
 class ControladorEstudiante extends Controller
 {
@@ -23,7 +26,6 @@ class ControladorEstudiante extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validatedData = $request->validate([
-            'Fotoqr' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Adjusted to image validation
             'Foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',   // Adjusted to image validation
             'identificador' => 'required|string|max:255',
             'nombre' => 'required|string|max:255',
@@ -34,14 +36,6 @@ class ControladorEstudiante extends Controller
             'entrada' => 'nullable|date',
             'salida' => 'nullable|date',
         ]);
-
-        // Handle Fotoqr upload
-        if ($request->hasFile('Fotoqr')) {
-            $imagenQR = $request->file('Fotoqr');
-            $nombreImagenQR = time() . '_' . $imagenQR->getClientOriginalName();
-            $rutaImagenQR = $imagenQR->move(public_path('ImagenesQREstudiantes'), $nombreImagenQR);
-            $validatedData['Fotoqr'] = 'ImagenesQREstudiantes/' . $nombreImagenQR;
-        }
     
         // Handle Foto upload
         if ($request->hasFile('Foto')) {
@@ -51,7 +45,14 @@ class ControladorEstudiante extends Controller
             $validatedData['Foto'] = 'FotosEstudiantes/' . $nombreImagen;
         }
 
-        Estudiante::create($validatedData);
+        // Create student record
+        $estudiante = Estudiante::create($validatedData);
+        // Generate QR Code
+        $qrCodePath = $this->generateQRCode($estudiante->identificador);
+        // Update the student record with the QR code path
+        $estudiante->update(['Fotoqr' => $qrCodePath]);
+        // Send QR Code via SMS (example, replace with your SMS sending logic)
+        //$this->sendQRCode($estudiante->telefono, $qrCodePath);
 
         return redirect()->route('estudiantes.index')->with('flash_message', 'Estudiante dado de alta exitósamente!');
     }
@@ -69,7 +70,6 @@ class ControladorEstudiante extends Controller
     public function update(Request $request, Estudiante $estudiante): RedirectResponse
     {
         $validatedData = $request->validate([
-            'Fotoqr' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Adjusted to image validation
             'Foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',   // Adjusted to image validation
             'identificador' => 'required|string|max:255',
             'nombre' => 'required|string|max:255',
@@ -80,14 +80,6 @@ class ControladorEstudiante extends Controller
             'entrada' => 'nullable|date',
             'salida' => 'nullable|date',
         ]);
-        // Handle Fotoqr upload
-        if ($request->hasFile('Fotoqr')) {
-            $imagenQR = $request->file('Fotoqr');
-            $nombreImagenQR = time() . '_' . $imagenQR->getClientOriginalName();
-            $rutaImagenQR = $imagenQR->move(public_path('ImagenesQREstudiantes'), $nombreImagenQR);
-            $validatedData['Fotoqr'] = 'ImagenesQREstudiantes/' . $nombreImagenQR;
-        }
-    
         // Handle Foto upload
         if ($request->hasFile('Foto')) {
             $imagen = $request->file('Foto');
@@ -97,6 +89,10 @@ class ControladorEstudiante extends Controller
         }
 
         $estudiante->update($validatedData);
+        // Generate QR Code
+        $qrCodePath = $this->generateQRCode($estudiante->identificador);
+        // Update the student record with the QR code path
+        $estudiante->update(['Fotoqr' => $qrCodePath]);
 
         return redirect()->route('estudiantes.index')->with('flash_message', 'Registro de estudiante actualizado exitósamente!');
     }
@@ -106,4 +102,33 @@ class ControladorEstudiante extends Controller
         $estudiante->delete();
         return redirect()->route('estudiantes.index')->with('flash_message', 'Registro de estudiante eliminado exitósamente!');
     }
+
+    /**
+     * Generate QR Code and return its path.
+     *
+     * @param string $data
+     * @return string
+     */
+    private function generateQRCode($data)
+    {
+        $url = route('estudiantes.show', ['estudiante' => $data]);
+        $qrCode = QrCode::size(300)->generate($url);
+        $qrCodePath = 'ImagenesQREstudiantes/' . time() . '_qrcode.png';
+        Storage::disk('public')->put($qrCodePath, $qrCode);
+        return $qrCodePath;
+    }
+
+    /**
+     * Send QR Code via SMS (example method, replace with your SMS sending logic).
+     *
+     * @param string $phone
+     * @param string $qrCodePath
+     */
+    //private function sendQRCode($phone, $qrCodePath)
+    //{
+        // Example code to send QR Code via SMS
+        // Replace this with your actual SMS sending logic
+        // $smsService->sendSMS($phone, 'Here is your QR Code: ' . asset('storage/' . $qrCodePath));
+        // Assuming asset('storage/') works with your storage setup
+    //}
 }
