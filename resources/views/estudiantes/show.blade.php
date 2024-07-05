@@ -1,6 +1,6 @@
 @extends('estudiantes.layout')
 
-@section('content') 
+@section('content')
 <div class="row">
     <div class="col-lg-6">
         <h2>Mostrar Información de Estudiante</h2>
@@ -14,16 +14,16 @@
     <div class="col-lg-6">
         <table class="table table-bordered table-striped">
             <tr>
-                <th>Foto de Estudiante:</th>
-                <td><img src="{{ asset($estudiante->Foto) }}" height="100px" width="100px"></td>
+                <th>Identificador:</th>
+                <td>{{ $estudiante->identificador }}</td>
             </tr>
             <tr>
                 <th>Imagen de Código QR:</th>
-                <td><img src="{{ asset($estudiante->Fotoqr) }}" width="100px"></td>
+                <td><img src="{{ asset($estudiante->Fotoqr) }}" alt="Código QR de {{ $estudiante->nombre }}" width="100px"></td>
             </tr>
             <tr>
-                <th>Identificador:</th>
-                <td>{{ $estudiante->identificador }}</td>
+                <th>Foto de Estudiante:</th>
+                <td><img src="{{ asset($estudiante->Foto) }}" alt="Foto de {{ $estudiante->nombre }}" height="100px" width="100px"></td>
             </tr>
             <tr>
                 <th>Nombre:</th>

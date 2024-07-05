@@ -9,13 +9,25 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/estudiantes/show/{estudiante}', [ControladorEstudiante::class, 'show'])
-    ->name('estudiantes.show');
-Route::get('/empleados/show/{empleado}', [ControladorEmpleado::class, 'show'])
-    ->name('empleados.show');
-Route::get('/visitantes/show/{visitante}', [ControladorVisitante::class, 'show'])
-    ->name('visitantes.show');
+// Route for saving QR Code (if intended for different controllers, adjust as needed)
+Route::post('/save-qrcode', [ControladorEstudiante::class, 'saveQRCode'])->name('save.qrcode');
 
-Route::resource('estudiantes', ControladorEstudiante::class);
-Route::resource('empleados', ControladorEmpleado::class);
-Route::resource('visitantes', ControladorVisitante::class);
+// Custom show routes
+Route::get('/estudiantes/show/{identificador}', [ControladorEstudiante::class, 'show'])->name('estudiantes.show');
+Route::get('/empleados/show/{identificador}', [ControladorEmpleado::class, 'show'])->name('empleados.show');
+Route::get('/visitantes/show/{identificador}', [ControladorVisitante::class, 'show'])->name('visitantes.show');
+
+// Custom edit routes
+Route::get('/estudiantes/edit/{identificador}', [ControladorEstudiante::class, 'edit'])->name('estudiantes.edit');
+Route::get('/empleados/edit/{identificador}', [ControladorEmpleado::class, 'edit'])->name('empleados.edit');
+Route::get('/visitantes/edit/{identificador}', [ControladorVisitante::class, 'edit'])->name('visitantes.edit');
+
+// Custom delete routes
+Route::delete('/estudiantes/{identificador}', [ControladorEstudiante::class, 'destroy'])->name('estudiantes.destroy');
+Route::delete('/empleados/{identificador}', [ControladorEmpleado::class, 'destroy'])->name('empleados.destroy');
+Route::delete('/visitantes/{identificador}', [ControladorVisitante::class, 'destroy'])->name('visitantes.destroy');
+
+// Resourceful routes for CRUD operations
+Route::resource('estudiantes', ControladorEstudiante::class)->except(['show', 'edit', 'destroy']);
+Route::resource('empleados', ControladorEmpleado::class)->except(['show', 'edit', 'destroy']);
+Route::resource('visitantes', ControladorVisitante::class)->except(['show', 'edit', 'destroy']);

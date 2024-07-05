@@ -3,18 +3,13 @@
 <div class="card">
     <div class="card-header">Editar Información de Estudiante</div>
     <div class="card-body">
-        <form action="{{ route('estudiantes.update', ['estudiante' => $estudiante->id]) }}" method="post" enctype="multipart/form-data">
+        <form action="{{ route('estudiantes.update', $estudiante->id) }}" method="post" enctype="multipart/form-data">
             @csrf
             @method('PATCH')
 
             <div class="form-group">
-                <label for="Fotoqr">Imagen de Codigo QR</label>
-                <div>
-                    @if($estudiante->Fotoqr)
-                        <img src="{{ asset($estudiante->Fotoqr) }}" alt="Imagen QR" style="max-width: 200px; max-height: 200px;">
-                    @endif
-                </div>
-                <input type="file" class="form-control" id="Fotoqr" name="Fotoqr">
+                <label for="identificador">Identificador:</label>
+                <input type="text" class="form-control" id="identificador" name="identificador" value="{{ $estudiante->identificador }}" required>
             </div>
             <div class="form-group">
                 <label for="Foto">Foto de Estudiante</label>
@@ -25,11 +20,6 @@
                 </div>
                 <input type="file" class="form-control" id="Foto" name="Foto">
             </div>
-            <div class="form-group">
-                <label for="identificador">Identificador:</label>
-                <input type="text" class="form-control" id="identificador" name="identificador" value="{{ $estudiante->identificador }}" required>
-            </div>
-            <div class="form-group">
                 <label for="nombre">Nombre:</label>
                 <input type="text" class="form-control" id="nombre" name="nombre" value="{{ $estudiante->nombre }}" required>
             </div>
@@ -57,8 +47,55 @@
                 <label for="salida">Salida:</label>
                 <input type="date" class="form-control" id="salida" name="salida" value="{{ $estudiante->salida }}">
             </div>
+            <div class="form-group">
+                <label for="Fotoqr">Imagen de Codigo QR</label>
+                <div>
+                    @if($estudiante->Fotoqr)
+                        <img src="{{ asset($estudiante->Fotoqr) }}" alt="Imagen QR" style="max-width: 200px; max-height: 200px;">
+                    @endif
+                </div>
+                <button type="button" id="generateQR" class="btn btn-primary mt-2">Generar Nuevo Codigo QR</button><br>
+                <!-- Hidden input field to store the QR code data URL -->
+                <input type="hidden" id="qrCodeData" name="qrCodeData">
+            </div>
+            
             <button type="submit" class="btn btn-success">Actualizar Registro</button>
         </form>
     </div>
 </div>
+<!-- Include qrcode-generator library -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const generateQR = document.getElementById('generateQR');
+    const qrCodeDisplay = document.getElementById('qrCodeDisplay');
+    const qrCodeDataInput = document.getElementById('qrCodeData');
+
+    generateQR.addEventListener('click', function() {
+        const identificadorValue = document.getElementById('identificador').value; // Assuming 'identificador' is the identifier field
+
+        if (identificadorValue) {
+            // Construct URL dynamically
+            const baseURL = 'http://192.168.1.76:8000'; // Replace '192.168.1.100' with your actual IPv4 address
+            const redirectURL = `${baseURL}/estudiantes/show/${identificadorValue}`;
+            console.log('Redirect URL:', redirectURL); // Debugging line
+
+            // Create QR code instance
+            const typeNumber = 4; // Example: adjust as needed
+            const errorCorrectionLevel = 'L'; // Example: adjust as needed
+            const qr = qrcode(typeNumber, errorCorrectionLevel);
+            qr.addData(redirectURL);
+            qr.make();
+
+            // Display QR code
+            qrCodeDisplay.innerHTML = qr.createImgTag(10); // Example: adjust size
+
+            // Store QR code data in hidden input field
+            qrCodeDataInput.value = qr.createDataURL(10); // Store as data URL
+        } else {
+            alert('Please enter data before generating QR code.');
+        }
+    });
+});
+</script>
 @endsection

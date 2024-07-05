@@ -6,14 +6,6 @@
         <form id="estudianteForm" action="{{ route('estudiantes.store') }}" method="post" enctype="multipart/form-data">
             @csrf
 
-            <!-- QR Code Display Area -->
-            <div id="qrCodeDisplay" class="mb-3"></div>
-
-            <div class="form-group">
-                <label for="Fotoqr">Imagen de Codigo QR</label>
-                <input type="file" class="form-control-file" id="Fotoqr" name="Fotoqr">
-            </div>
-
             <div class="form-group">
                 <label for="Foto">Foto del Estudiante</label>
                 <input type="file" class="form-control-file" id="Foto" name="Foto">
@@ -59,43 +51,52 @@
                 <input type="date" class="form-control" id="salida" name="salida">
             </div>
 
-            <button type="button" id="generateQR" class="btn btn-primary">Generar QR Code</button>
+            <div class="form-group">
+                <h1> Codigo QR</h1>
+                <button type="button" id="generateQR" class="btn btn-primary">Generar QR Code</button>
+            </div>
+            <!-- QR Code Display Area -->
+            <div id="qrCodeDisplay" class="mb-3"></div>            
+            <input type="hidden" name="qrCodeData" id="qrCodeData">
+            
             <button type="submit" class="btn btn-success">Registrar</button>
         </form>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/qrcode@latest"></script>
+<!-- Include qrcode-generator library -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const form = document.getElementById('estudianteForm');
-        const qrCodeDisplay = document.getElementById('qrCodeDisplay');
+document.addEventListener('DOMContentLoaded', function () {
+    const generateQR = document.getElementById('generateQR');
+    const qrCodeDisplay = document.getElementById('qrCodeDisplay');
+    const qrCodeDataInput = document.getElementById('qrCodeData');
 
-        // Function to generate QR code
-        function generateQRCode(text) {
-            qrCodeDisplay.innerHTML = ''; // Clear previous QR code if any
-            const qr = new QRCode(qrCodeDisplay, {
-                text: text,
-                width: 200,
-                height: 200
-            });
+    generateQR.addEventListener('click', function() {
+        const identificadorValue = document.getElementById('identificador').value; // Assuming 'identificador' is the identifier field
+
+        if (identificadorValue) {
+            // Construct URL dynamically
+            const baseURL = 'http://192.168.1.76:8000'; // Replace '192.168.1.100' with your actual IPv4 address
+            const redirectURL = `${baseURL}/estudiantes/show/${identificadorValue}`;
+            console.log('Redirect URL:', redirectURL); // Debugging line
+
+            // Create QR code instance
+            const typeNumber = 4; // Example: adjust as needed
+            const errorCorrectionLevel = 'L'; // Example: adjust as needed
+            const qr = qrcode(typeNumber, errorCorrectionLevel);
+            qr.addData(redirectURL);
+            qr.make();
+
+            // Display QR code
+            qrCodeDisplay.innerHTML = qr.createImgTag(10); // Example: adjust size
+
+            // Store QR code data in hidden input field
+            qrCodeDataInput.value = qr.createDataURL(10); // Store as data URL
+        } else {
+            alert('Please enter data before generating QR code.');
         }
-
-        // Event listener for Generate QR Code button
-        document.getElementById('generateQR').addEventListener('click', function () {
-            const identificador = document.getElementById('identificador').value.trim();
-            if (identificador) {
-                generateQRCode(identificador);
-            } else {
-                alert('Por favor, ingrese un identificador válido antes de generar el código QR.');
-            }
-        });
-
-        // Submit form listener (optional, you can handle form submission in Laravel)
-        form.addEventListener('submit', function (event) {
-            // Optionally, you can do additional form validation or processing here
-            // before allowing the form submission to proceed.
-        });
     });
+});
 </script>
 @endsection

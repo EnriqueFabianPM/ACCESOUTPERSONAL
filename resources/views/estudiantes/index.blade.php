@@ -1,4 +1,5 @@
 @extends('estudiantes.layout')
+
 @section('content')
 <div class="container">
     <div class="row">
@@ -17,10 +18,9 @@
                         <table class="table table-striped">
                             <thead>
                                 <tr>
-                                    <th>#</th>
+                                    <th>Identificador</th>
                                     <th>Código QR</th>
                                     <th>Foto</th>
-                                    <th>Identificador</th>
                                     <th>Nombre</th>
                                     <th>Apellidos</th>
                                     <th>Semestre</th>
@@ -34,7 +34,7 @@
                             <tbody>
                                 @forelse($estudiantes as $estudiante)
                                 <tr>
-                                    <td>{{ $loop->iteration }}</td>
+                                    <td>{{ $estudiante->identificador }}</td>
                                     <td>
                                         @if($estudiante->Fotoqr)
                                         <img src="{{ asset($estudiante->Fotoqr) }}" width="100px">
@@ -49,7 +49,6 @@
                                         No hay imagen
                                         @endif
                                     </td>
-                                    <td>{{ $estudiante->identificador }}</td>
                                     <td>{{ $estudiante->nombre }}</td>
                                     <td>{{ $estudiante->apellidos }}</td>
                                     <td>{{ $estudiante->semestre }}</td>
@@ -58,31 +57,27 @@
                                     <td>{{ $estudiante->entrada }}</td>
                                     <td>{{ $estudiante->salida }}</td>
                                     <td>
-                                        <a href="{{ route('estudiantes.show', $estudiante->id) }}"
+                                        <a href="{{ route('estudiantes.show', $estudiante->identificador) }}"
                                             class="btn btn-info btn-sm" title="Ver Estudiante">
                                             <i class="fa fa-eye" aria-hidden="true"></i> Ver
                                         </a>
-                                        <a href="{{ route('estudiantes.edit', $estudiante->id) }}"
+                                        <a href="{{ route('estudiantes.edit', $estudiante->identificador) }}"
                                             class="btn btn-primary btn-sm" title="Editar Estudiante">
                                             <i class="fa fa-pencil-square-o" aria-hidden="true"></i> Editar
                                         </a>
-
-                                        <form method="POST"
-                                            action="{{ route('estudiantes.destroy', $estudiante->id) }}"
-                                            accept-charset="UTF-8" style="display: inline">
+                                        <form method="POST" action="{{ route('estudiantes.destroy', $estudiante->identificador) }}" accept-charset="UTF-8" style="display: inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-danger btn-sm"
-                                                title="Eliminar Estudiante"
-                                                onclick="return confirm('¿Estás seguro de que quieres eliminar este estudiante?')">
+                                            <button type="submit" class="btn btn-danger btn-sm" title="Eliminar Estudiante" onclick="return confirm('¿Estás seguro de que quieres eliminar este estudiante?')">
                                                 <i class="fa fa-trash-o" aria-hidden="true"></i> Eliminar
                                             </button>
                                         </form>
+                                        
                                     </td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="12" class="text-center">No hay estudiantes registrados.</td>
+                                    <td colspan="11" class="text-center">No hay estudiantes registrados.</td>
                                 </tr>
                                 @endforelse
                             </tbody>
