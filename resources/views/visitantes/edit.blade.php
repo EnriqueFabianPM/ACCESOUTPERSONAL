@@ -12,6 +12,14 @@
                 <input type="text" class="form-control" id="identificador" name="identificador" value="{{ $visitante->identificador }}" required>
             </div>
             <div class="form-group">
+                <label for="Fotoqr">Imagen de Codigo QR</label>
+                <div>
+                    @if($visitante->Fotoqr)
+                        <img src="{{ asset($visitante->Fotoqr) }}" alt="Imagen QR" style="max-width: 200px; max-height: 200px;">
+                    @endif
+                </div>
+            </div>
+            <div class="form-group">
                 <label for="nombre">Nombre:</label>
                 <input type="text" class="form-control" id="nombre" name="nombre" value="{{ $visitante->nombre }}" required>
             </div>
@@ -40,15 +48,13 @@
                 <input type="date" class="form-control" id="salida" name="salida" value="{{ $visitante->salida }}">
             </div>
             <div class="form-group">
-                <label for="Fotoqr">Imagen de Codigo QR</label>
-                <div>
-                    @if($visitante->Fotoqr)
-                        <img src="{{ asset($visitante->Fotoqr) }}" alt="Imagen QR" style="max-width: 200px; max-height: 200px;">
-                    @endif
-                </div>
-                <button type="button" id="generateQR" class="btn btn-primary mt-2">Generar Nuevo Codigo QR</button><br>
-                <!-- Hidden input field to store the QR code data URL -->
-                <input type="hidden" id="qrCodeData" name="qrCodeData">
+                <label for="Fotoqr">Generar nuevo Codigo QR</label>
+                <button type="button" id="generateQR" class="btn btn-primary">Generar QR</button>
+
+                <!-- QR Code Display Area -->
+                <h1> Codigo QR Nuevo</h1>
+                <div id="qrCodeDisplay" class="mb-3"></div>            
+                <input type="hidden" name="qrCodeData" id="qrCodeData">
             </div>
 
             <button type="submit" class="btn btn-success">Actualizar Registro</button>
@@ -68,7 +74,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (identificadorValue) {
             // Construct URL dynamically
-            const baseURL = 'http://192.168.1.76:8000'; // Replace '192.168.1.100' with your actual IPv4 address
+            const baseURL = 'http://192.168.100.67:8000'; // Replace '192.168.1.100' with your actual IPv4 address
             const redirectURL = `${baseURL}/visitantes/show/${identificadorValue}`;
             console.log('Redirect URL:', redirectURL); // Debugging line
 
