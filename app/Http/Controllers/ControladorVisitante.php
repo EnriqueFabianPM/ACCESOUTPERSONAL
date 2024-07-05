@@ -33,7 +33,6 @@ class ControladorVisitante extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validatedData = $request->validate([
-            'Fotoqr' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Adjusted to image validation
             'identificador' => 'required|string|max:255',
             'nombre' => 'required|string|max:255',
             'apellidos' => 'required|string|max:255',
@@ -44,32 +43,31 @@ class ControladorVisitante extends Controller
             'salida' => 'nullable|date',
         ]);
 
-        // Handle Fotoqr upload
-        if ($request->hasFile('Fotoqr')) {
-            $imagenQR = $request->file('Fotoqr');
-            $nombreImagenQR = time() . '_' . $imagenQR->getClientOriginalName();
-            $rutaImagenQR = $imagenQR->move(public_path('ImagenesQRVisitante'), $nombreImagenQR);
-            $validatedData['Fotoqr'] = 'ImagenesQRVisitante/' . $nombreImagenQR;
+        if ($request->filled('qrCodeData')) {
+            $qrCodeData = $request->input('qrCodeData');
+            $qrCodePath = $this->saveQRCode($qrCodeData);
+            $validatedData['Fotoqr'] = $qrCodePath;
         }
 
         Visitante::create($validatedData);
-
         return redirect()->route('visitantes.index')->with('flash_message', 'Visitante dado de alta exitósamente!');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Visitante $visitante): View
+    public function show($identificador): View
     {
+        $visitante = Visitante::where('identificador', $identificador)->firstOrFail();
         return view('visitantes.show', compact('visitante'));
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Visitante $visitante): View
+    public function edit($identificador): View
     {
+        $visitante = Visitante::where('identificador', $identificador)->firstOrFail();
         return view('visitantes.edit', compact('visitante'));
     }
 
@@ -90,25 +88,32 @@ class ControladorVisitante extends Controller
             'salida' => 'nullable|date',
         ]);
 
-        // Handle Fotoqr upload
-        if ($request->hasFile('Fotoqr')) {
-            $imagenQR = $request->file('Fotoqr');
-            $nombreImagenQR = time() . '_' . $imagenQR->getClientOriginalName();
-            $rutaImagenQR = $imagenQR->move(public_path('ImagenesQRVisitante'), $nombreImagenQR);
-            $validatedData['Fotoqr'] = 'ImagenesQRVisitante/' . $nombreImagenQR;
+        if ($request->filled('qrCodeData')) {
+            $qrCodeData = $request->input('qrCodeData');
+            $qrCodePath = $this->saveQRCode($qrCodeData);
+            $validatedData['Fotoqr'] = $qrCodePath;
         }
 
         $visitante->update($validatedData);
-
         return redirect()->route('visitantes.index')->with('flash_message', 'Registro de visitante actualizado exitósamente!');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Visitante $visitante): RedirectResponse
+    public function destroy($identificador): RedirectResponse
     {
+        $visitante = Visitante::where('identificador', $identificador)->firstOrFail();
         $visitante->delete();
         return redirect()->route('visitantes.index')->with('flash_message', 'Registro de visitante eliminado exitósamente!');
+    }
+
+    private function saveQRCode($qrCodeData)
+    {
+        $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $qrCodeData));
+        $qrCodePath = 'ImagenesQRVisitantes/' . time() . '_qrcode.jpg';
+        file_put_contents(public_path($qrCodePath), $imageData);
+
+        return $qrCodePath;
     }
 }

@@ -33,7 +33,6 @@ class ControladorEmpleado extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validatedData = $request->validate([
-            'Fotoqr' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Adjusted to image validation
             'Foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',   // Adjusted to image validation
             'identificador' => 'required|string|max:255',
             'nombre' => 'required|string|max:255',
@@ -45,14 +44,6 @@ class ControladorEmpleado extends Controller
             'salida' => 'nullable|date',
         ]);
 
-        // Handle Fotoqr upload
-        if ($request->hasFile('Fotoqr')) {
-            $imagenQR = $request->file('Fotoqr');
-            $nombreImagenQR = time() . '_' . $imagenQR->getClientOriginalName();
-            $rutaImagenQR = $imagenQR->move(public_path('ImagenesQREmpleados'), $nombreImagenQR);
-            $validatedData['Fotoqr'] = 'ImagenesQREmpleados/' . $nombreImagenQR;
-        }
-    
         // Handle Foto upload
         if ($request->hasFile('Foto')) {
             $imagen = $request->file('Foto');
@@ -60,25 +51,32 @@ class ControladorEmpleado extends Controller
             $rutaImagen = $imagen->move(public_path('FotosEmpleados'), $nombreImagen);
             $validatedData['Foto'] = 'FotosEmpleados/' . $nombreImagen;
         }
+        
+        if ($request->filled('qrCodeData')) {
+            $qrCodeData = $request->input('qrCodeData');
+            $qrCodePath = $this->saveQRCode($qrCodeData);
+            $validatedData['Fotoqr'] = $qrCodePath;
+        }
 
         Empleado::create($validatedData);
-
         return redirect()->route('empleados.index')->with('flash_message', 'Empleado dado de alta exitósamente!');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Empleado $empleado): View
+    public function show($identificador): View
     {
+        $empleado = Empleado::where('identificador', $identificador)->firstOrFail();
         return view('empleados.show', compact('empleado'));
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Empleado $empleado): View
+    public function edit($identificador): View
     {
+        $empleado = Empleado::where('identificador', $identificador)->firstOrFail();
         return view('empleados.edit', compact('empleado'));
     }
 
@@ -99,14 +97,7 @@ class ControladorEmpleado extends Controller
             'entrada' => 'nullable|date',
             'salida' => 'nullable|date',
         ]);
-        // Handle Fotoqr upload
-        if ($request->hasFile('Fotoqr')) {
-            $imagenQR = $request->file('Fotoqr');
-            $nombreImagenQR = time() . '_' . $imagenQR->getClientOriginalName();
-            $rutaImagenQR = $imagenQR->move(public_path('ImagenesQREmpleados'), $nombreImagenQR);
-            $validatedData['Fotoqr'] = 'ImagenesQREmpleados/' . $nombreImagenQR;
-        }
-    
+
         // Handle Foto upload
         if ($request->hasFile('Foto')) {
             $imagen = $request->file('Foto');
@@ -115,17 +106,32 @@ class ControladorEmpleado extends Controller
             $validatedData['Foto'] = 'FotosEmpleados/' . $nombreImagen;
         }
 
-        $empleado->update($validatedData);
+        if ($request->filled('qrCodeData')) {
+            $qrCodeData = $request->input('qrCodeData');
+            $qrCodePath = $this->saveQRCode($qrCodeData);
+            $validatedData['Fotoqr'] = $qrCodePath;
+        }
 
+        $empleado->update($validatedData);
         return redirect()->route('empleados.index')->with('flash_message', 'Registro de empleado actualizado exitósamente!');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Empleado $empleado): RedirectResponse
+    public function destroy($identificador): RedirectResponse
     {
+        $empleado = Empleado::where('identificador', $identificador)->firstOrFail();
         $empleado->delete();
         return redirect()->route('empleados.index')->with('flash_message', 'Registro de empleado eliminado exitósamente!');
+    }
+
+    private function saveQRCode($qrCodeData)
+    {
+        $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $qrCodeData));
+        $qrCodePath = 'ImagenesQREmpleados/' . time() . '_qrcode.jpg';
+        file_put_contents(public_path($qrCodePath), $imageData);
+
+        return $qrCodePath;
     }
 }

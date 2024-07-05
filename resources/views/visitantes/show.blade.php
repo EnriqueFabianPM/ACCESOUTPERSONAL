@@ -14,12 +14,12 @@
     <div class="col-lg-6">
         <table class="table table-bordered table-striped">
             <tr>
-                <th>Imagen de Código QR:</th>
-                <td><img src="{{ asset($visitante->Fotoqr) }}" width="100px"></td>
-            </tr>
-            <tr>
                 <th>Identificador:</th>
                 <td>{{ $visitante->identificador }}</td>
+            </tr>
+            <tr>
+                <th>Imagen de Código QR:</th>
+                <td><img src="{{ asset($visitante->Fotoqr) }}" width="100px"></td>
             </tr>
             <tr>
                 <th>Nombre:</th>

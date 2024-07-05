@@ -17,9 +17,8 @@
                         <table class="table table-striped">
                             <thead>
                                 <tr>
-                                    <th>#</th>
-                                    <th>Código QR</th>
                                     <th>Identificador</th>
+                                    <th>Código QR</th>
                                     <th>Nombre</th>
                                     <th>Apellidos</th>
                                     <th>Motivo de Visita</th>
@@ -33,7 +32,7 @@
                             <tbody>
                                 @forelse($visitantes as $visitante)
                                 <tr>
-                                    <td>{{ $loop->iteration }}</td>
+                                    <td>{{ $visitante->identificador }}</td>
                                     <td>
                                         @if($visitante->Fotoqr)
                                         <img src="{{ asset($visitante->Fotoqr) }}" width="100px">
@@ -41,7 +40,6 @@
                                         No hay imagen
                                         @endif
                                     </td>
-                                    <td>{{ $visitante->identificador }}</td>
                                     <td>{{ $visitante->nombre }}</td>
                                     <td>{{ $visitante->apellidos }}</td>
                                     <td>{{ $visitante->motivo }}</td>
@@ -50,17 +48,17 @@
                                     <td>{{ $visitante->entrada }}</td>
                                     <td>{{ $visitante->salida }}</td>
                                     <td>
-                                        <a href="{{ route('visitantes.show', $visitante->id) }}"
+                                        <a href="{{ route('visitantes.show', $visitante->identificador) }}"
                                             class="btn btn-info btn-sm" title="Ver Visitante">
                                             <i class="fa fa-eye" aria-hidden="true"></i> Ver
                                         </a>
-                                        <a href="{{ route('visitantes.edit', $visitante->id) }}"
+                                        <a href="{{ route('visitantes.edit', $visitante->identificador) }}"
                                             class="btn btn-primary btn-sm" title="Editar Visitante">
                                             <i class="fa fa-pencil-square-o" aria-hidden="true"></i> Editar
                                         </a>
 
                                         <form method="POST"
-                                            action="{{ route('visitantes.destroy', $visitante->id) }}"
+                                            action="{{ route('visitantes.destroy', $visitante->identificador) }}"
                                             accept-charset="UTF-8" style="display: inline">
                                             @csrf
                                             @method('DELETE')

@@ -11,6 +11,8 @@ Route::get('/', function () {
 
 // Route for saving QR Code (if intended for different controllers, adjust as needed)
 Route::post('/save-qrcode', [ControladorEstudiante::class, 'saveQRCode'])->name('save.qrcode');
+Route::post('/save-qrcode', [ControladorEmpleado::class, 'saveQRCode'])->name('save.qrcode');
+Route::post('/save-qrcode', [ControladorVisitante::class, 'saveQRCode'])->name('save.qrcode');
 
 // Custom show routes
 Route::get('/estudiantes/show/{identificador}', [ControladorEstudiante::class, 'show'])->name('estudiantes.show');
