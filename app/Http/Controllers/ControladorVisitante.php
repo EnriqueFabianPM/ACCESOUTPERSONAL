@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\VisitanteQR;
 
 class ControladorVisitante extends Controller
 {
@@ -15,7 +17,7 @@ class ControladorVisitante extends Controller
      */
     public function index(): View
     {
-        $visitantes = Visitante::paginate(10); // Ejemplo: paginar cada 10 resultados
+        $visitantes = Visitante::paginate(10);
         return view('visitantes.index', compact('visitantes'));
     }
 
@@ -43,14 +45,20 @@ class ControladorVisitante extends Controller
             'salida' => 'nullable|date',
         ]);
 
+        // Create visitante record
+        $visitante = Visitante::create($validatedData);
+
+        // Save QR code if provided
         if ($request->filled('qrCodeData')) {
             $qrCodeData = $request->input('qrCodeData');
             $qrCodePath = $this->saveQRCode($qrCodeData);
-            $validatedData['Fotoqr'] = $qrCodePath;
+            $visitante->update(['Fotoqr' => $qrCodePath]);
         }
 
-        Visitante::create($validatedData);
-        return redirect()->route('visitantes.index')->with('flash_message', 'Visitante dado de alta exitósamente!');
+        // Send email with QR code attached
+        $this->sendQRCodeByEmail($visitante);
+
+        return redirect()->route('visitantes.index')->with('flash_message', 'Visitante dado de alta exitosamente!');
     }
 
     /**
@@ -77,7 +85,6 @@ class ControladorVisitante extends Controller
     public function update(Request $request, Visitante $visitante): RedirectResponse
     {
         $validatedData = $request->validate([
-            'Fotoqr' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Adjusted to image validation
             'identificador' => 'required|string|max:255',
             'nombre' => 'required|string|max:255',
             'apellidos' => 'required|string|max:255',
@@ -88,14 +95,20 @@ class ControladorVisitante extends Controller
             'salida' => 'nullable|date',
         ]);
 
+        // Update visitante record
+        $visitante->update($validatedData);
+
+        // Save QR code if provided
         if ($request->filled('qrCodeData')) {
             $qrCodeData = $request->input('qrCodeData');
             $qrCodePath = $this->saveQRCode($qrCodeData);
-            $validatedData['Fotoqr'] = $qrCodePath;
+            $visitante->update(['Fotoqr' => $qrCodePath]);
         }
 
-        $visitante->update($validatedData);
-        return redirect()->route('visitantes.index')->with('flash_message', 'Registro de visitante actualizado exitósamente!');
+        // Send email with QR code attached
+        $this->sendQRCodeByEmail($visitante);
+
+        return redirect()->route('visitantes.index')->with('flash_message', 'Registro de visitante actualizado exitosamente!');
     }
 
     /**
@@ -105,9 +118,12 @@ class ControladorVisitante extends Controller
     {
         $visitante = Visitante::where('identificador', $identificador)->firstOrFail();
         $visitante->delete();
-        return redirect()->route('visitantes.index')->with('flash_message', 'Registro de visitante eliminado exitósamente!');
+        return redirect()->route('visitantes.index')->with('flash_message', 'Registro de visitante eliminado exitosamente!');
     }
 
+    /**
+     * Save QR code image to public directory.
+     */
     private function saveQRCode($qrCodeData)
     {
         $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $qrCodeData));
@@ -115,5 +131,13 @@ class ControladorVisitante extends Controller
         file_put_contents(public_path($qrCodePath), $imageData);
 
         return $qrCodePath;
+    }
+
+    /**
+     * Send QR code to visitante's email address.
+     */
+    private function sendQRCodeByEmail(Visitante $visitante)
+    {
+        Mail::to($visitante->email)->send(new VisitanteQR($visitante->Fotoqr));
     }
 }

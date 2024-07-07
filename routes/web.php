@@ -9,10 +9,10 @@ Route::get('/', function () {
     return view('welcome');
 })->name('Inicio');
 
-// Custom save QR code routes
-Route::post('/save-qrcode-estudiante', [ControladorEstudiante::class, 'saveQRCode'])->name('save.qrcode.estudiante');
-Route::post('/save-qrcode-empleado', [ControladorEmpleado::class, 'saveQRCode'])->name('save.qrcode.empleado');
-Route::post('/save-qrcode-visitante', [ControladorVisitante::class, 'saveQRCode'])->name('save.qrcode.visitante');
+// Custom SaveQRs routes
+Route::post('/estudiantes/save-qrcode', [ControladorEstudiante::class, 'saveQRCode'])->name('estudiantes.save.qrcode');
+Route::post('/empleados/save-qrcode', [ControladorEmpleado::class, 'saveQRCode'])->name('empleados.save.qrcode');
+Route::post('/visitantes/save-qrcode', [ControladorVisitante::class, 'saveQRCode'])->name('visitantes.save.qrcode');
 
 // Custom show routes
 Route::get('/estudiantes/show/{identificador}', [ControladorEstudiante::class, 'show'])->name('estudiantes.show');

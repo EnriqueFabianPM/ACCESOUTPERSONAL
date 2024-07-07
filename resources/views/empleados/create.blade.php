@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (identificadorValue) {
             // Construct URL dynamically
-            const baseURL = 'http://192.168.1.76:8000'; // Replace '192.168.1.100' with your actual IPv4 address
+            const baseURL = 'http://192.168.100.67:8000'; // Replace '192.168.1.100' with your actual IPv4 address
             const redirectURL = `${baseURL}/empleados/show/${identificadorValue}`;
             console.log('Redirect URL:', redirectURL); // Debugging line
 
