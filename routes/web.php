@@ -7,12 +7,12 @@ use App\Http\Controllers\ControladorVisitante;
 
 Route::get('/', function () {
     return view('welcome');
-});
+})->name('Inicio');
 
-// Route for saving QR Code (if intended for different controllers, adjust as needed)
-Route::post('/save-qrcode', [ControladorEstudiante::class, 'saveQRCode'])->name('save.qrcode');
-Route::post('/save-qrcode', [ControladorEmpleado::class, 'saveQRCode'])->name('save.qrcode');
-Route::post('/save-qrcode', [ControladorVisitante::class, 'saveQRCode'])->name('save.qrcode');
+// Custom save QR code routes
+Route::post('/save-qrcode-estudiante', [ControladorEstudiante::class, 'saveQRCode'])->name('save.qrcode.estudiante');
+Route::post('/save-qrcode-empleado', [ControladorEmpleado::class, 'saveQRCode'])->name('save.qrcode.empleado');
+Route::post('/save-qrcode-visitante', [ControladorVisitante::class, 'saveQRCode'])->name('save.qrcode.visitante');
 
 // Custom show routes
 Route::get('/estudiantes/show/{identificador}', [ControladorEstudiante::class, 'show'])->name('estudiantes.show');

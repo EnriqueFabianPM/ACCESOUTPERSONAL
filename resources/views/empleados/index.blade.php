@@ -6,6 +6,7 @@
             <div class="card">
                 <div class="card-header">
                     <h2>Sistema de Registro de Empleados UTSC</h2>
+                    <center><a href="{{ route('Inicio') }}" style="background-color: #010201; padding: 10px;" class="btn btn-primary btn-lg mr-3">Volver al Inicio</a></center>
                 </div>
                 <div class="card-body">
                     <a href="{{ route('empleados.create') }}" class="btn btn-success btn-sm mb-3"
