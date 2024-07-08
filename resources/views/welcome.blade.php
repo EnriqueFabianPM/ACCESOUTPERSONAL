@@ -20,6 +20,9 @@
                 <a href="{{ route('empleados.index') }}" style="background-color: #25b7e4; padding: 20px; color: #0c0c0c;" class="btn btn-primary btn-lg mr-3">Tabla de Empleados</a>
                 <a href="{{ route('visitantes.index') }}" style="background-color: #1f33e6; padding: 20px; color: #0c0c0c;" class="btn btn-primary btn-lg">Tabla de Visitantes</a>
             </div>
+            <center><h1>Buscar personas por Codigo QR</h1></center>
+            <div class="text-center mt-5">
+            <a href="{{ route('scanner') }}" style="background-color: #ffffff; padding: 20px; color: #0c0c0c;" class="btn btn-primary btn-lg mr-3">Escanear QR</a>
         </section>
         <!--
         <section id="MISION">

@@ -33,3 +33,6 @@ Route::delete('/visitantes/{identificador}', [ControladorVisitante::class, 'dest
 Route::resource('estudiantes', ControladorEstudiante::class)->except(['show', 'edit', 'destroy']);
 Route::resource('empleados', ControladorEmpleado::class)->except(['show', 'edit', 'destroy']);
 Route::resource('visitantes', ControladorVisitante::class)->except(['show', 'edit', 'destroy']);
+
+// QR Scanner route
+Route::view('/scanner', 'scanner')->name('scanner');
