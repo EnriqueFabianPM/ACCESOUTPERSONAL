@@ -9,6 +9,11 @@ Route::get('/', function () {
     return view('welcome');
 })->name('Inicio');
 
+// Route for QR code scanner page
+Route::get('/scanner', function () {
+    return view('scanner');
+})->name('scanner');
+
 // Custom SaveQRs routes
 Route::post('/estudiantes/save-qrcode', [ControladorEstudiante::class, 'saveQRCode'])->name('estudiantes.save.qrcode');
 Route::post('/empleados/save-qrcode', [ControladorEmpleado::class, 'saveQRCode'])->name('empleados.save.qrcode');

@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\EmpleadoQR;
 
 class ControladorEmpleado extends Controller
 {
@@ -58,7 +60,11 @@ class ControladorEmpleado extends Controller
             $validatedData['Fotoqr'] = $qrCodePath;
         }
 
-        Empleado::create($validatedData);
+        // Create student record
+        $empleado = Empleado::create($validatedData);
+
+        // Send email with QR code attached
+        $this->sendQRCodeByEmail($empleado);
         return redirect()->route('empleados.index')->with('flash_message', 'Empleado dado de alta exitósamente!');
     }
 
@@ -113,6 +119,10 @@ class ControladorEmpleado extends Controller
         }
 
         $empleado->update($validatedData);
+
+        // Send email with QR code attached
+        $this->sendQRCodeByEmail($empleado);
+
         return redirect()->route('empleados.index')->with('flash_message', 'Registro de empleado actualizado exitósamente!');
     }
 
@@ -133,5 +143,22 @@ class ControladorEmpleado extends Controller
         file_put_contents(public_path($qrCodePath), $imageData);
 
         return $qrCodePath;
+    }
+
+    /**
+     * Send QR code to visitante's email address.
+     */
+    private function sendQRCodeByEmail(Empleado $empleado)
+    {
+        $email = $empleado->email;
+        $domain = substr(strrchr($email, "@"), 1);
+
+        if ($domain === 'gmail.com' || $domain === 'googlemail.com') {
+            Mail::mailer('smtp')->to($email)->send(new EmpleadoQR($empleado->Fotoqr));
+        } elseif (in_array($domain, ['outlook.com', 'hotmail.com', 'live.com'])) {
+            Mail::mailer('smtp_outlook')->to($email)->send(new EmpleadoQR($empleado->Fotoqr));
+        } else {
+            Mail::to($email)->send(new EmpleadoQR($empleado->Fotoqr));
+        }
     }
 }

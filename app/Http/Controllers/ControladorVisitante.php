@@ -138,6 +138,15 @@ class ControladorVisitante extends Controller
      */
     private function sendQRCodeByEmail(Visitante $visitante)
     {
-        Mail::to($visitante->email)->send(new VisitanteQR($visitante->Fotoqr));
+        $email = $visitante->email;
+        $domain = substr(strrchr($email, "@"), 1);
+
+        if ($domain === 'gmail.com' || $domain === 'googlemail.com') {
+            Mail::mailer('smtp')->to($email)->send(new VisitanteQR($visitante->Fotoqr));
+        } elseif (in_array($domain, ['outlook.com', 'hotmail.com', 'live.com'])) {
+            Mail::mailer('smtp_outlook')->to($email)->send(new VisitanteQR($visitante->Fotoqr));
+        } else {
+            Mail::to($email)->send(new VisitanteQR($visitante->Fotoqr));
+        }
     }
 }

@@ -14,11 +14,15 @@
             </h2>
         </section>
         <section id="botones" style="background-color: #b075f3; padding: 10px;">
-            <center><h1>Escoje a cual tabla de registros deseas ir</h1></center>
+            <center><h1>Escoje a cual tabla de registros deseas ir: </h1></center>
             <div class="text-center mt-5">
                 <a href="{{ route('estudiantes.index') }}" style="background-color: #1571da; padding: 20px; color: #0c0c0c;" class="btn btn-primary btn-lg mr-3">Tabla de Estudiantes</a>
                 <a href="{{ route('empleados.index') }}" style="background-color: #25b7e4; padding: 20px; color: #0c0c0c;" class="btn btn-primary btn-lg mr-3">Tabla de Empleados</a>
                 <a href="{{ route('visitantes.index') }}" style="background-color: #1f33e6; padding: 20px; color: #0c0c0c;" class="btn btn-primary btn-lg">Tabla de Visitantes</a>
+            </div>
+            <center><h1>Ir a la pagina de Escaneo: </h1></center>
+            <div class="text-center mt-5">
+                <a href="{{ route('scanner') }}" style="background-color: #1571da; padding: 20px; color: #0c0c0c;" class="btn btn-primary btn-lg mr-3">Escanear Codigo QR</a>
             </div>
         </section>
         <!--

@@ -6,7 +6,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class VisitanteQR extends Mailable
+class EmpleadoQR extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -30,7 +30,7 @@ class VisitanteQR extends Mailable
      */
     public function build()
     {
-        return $this->view('emails.VisitanteQR')
+        return $this->view('emails.EmpleadoQR')
                     ->subject('¡Tu Código QR para la Visita!')
                     ->attach(public_path($this->qrImagePath), [
                         'as' => 'qr_code.jpg',

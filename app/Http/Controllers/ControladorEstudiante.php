@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Estudiante;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\EstudianteQR;
 
 class ControladorEstudiante extends Controller
 {
@@ -49,7 +51,10 @@ class ControladorEstudiante extends Controller
         }
 
         // Create student record
-        Estudiante::create($validatedData);
+        $estudiante = Estudiante::create($validatedData);
+
+        // Send email with QR code attached
+        $this->sendQRCodeByEmail($estudiante);
         return redirect()->route('estudiantes.index')->with('flash_message', 'Estudiante dado de alta exitósamente!');
     }
 
@@ -96,6 +101,9 @@ class ControladorEstudiante extends Controller
         // Create student record
         $estudiante->update($validatedData);
 
+        // Send email with QR code attached
+        $this->sendQRCodeByEmail($estudiante);
+
         // Generate QR code path and update the record
         //$qrCodePath = $this->generateQRCodePath($estudiante->identificador); // Example function to generate QR code path
 
@@ -117,4 +125,22 @@ class ControladorEstudiante extends Controller
 
         return $qrCodePath;
     }
+
+    /**
+     * Send QR code to visitante's email address.
+     */
+    private function sendQRCodeByEmail(Estudiante $estudiante)
+    {
+        $email = $estudiante->email;
+        $domain = substr(strrchr($email, "@"), 1);
+
+        if ($domain === 'gmail.com' || $domain === 'googlemail.com') {
+            Mail::mailer('smtp')->to($email)->send(new EstudianteQR($estudiante->Fotoqr));
+        } elseif (in_array($domain, ['outlook.com', 'hotmail.com', 'live.com'])) {
+            Mail::mailer('smtp_outlook')->to($email)->send(new EstudianteQR($estudiante->Fotoqr));
+        } else {
+            Mail::to($email)->send(new EstudianteQR($estudiante->Fotoqr));
+        }
+    }
+    
 }
