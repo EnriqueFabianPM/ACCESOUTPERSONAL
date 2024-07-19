@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 use App\Mail\EmpleadoQR;
+use App\Models\Log;
 
 class ControladorEmpleado extends Controller
 {
@@ -128,36 +129,56 @@ class ControladorEmpleado extends Controller
         }
     }
 
-    public function showEntradaForm($id): View
+    // Show Entry Form
+    public function showEntradaForm($id)
     {
         $empleado = Empleado::findOrFail($id);
         return view('empleados.entrada', compact('empleado'));
     }
 
-    public function storeEntrada(Request $request, $id): RedirectResponse
+    // Store Entry Data
+    public function storeEntrada(Request $request, $id)
     {
         $empleado = Empleado::findOrFail($id);
         $empleado->entrada = now();
         $empleado->save();
 
-        return redirect()->route('empleados.log')->with('flash_message', 'Entrada registrada exitósamente!');
+        // Create log entry
+        Log::create([
+            'user_id' => $empleado->id,
+            'user_type' => 'Empleado',
+            'action' => 'Entrada',
+            'timestamp' => now(),
+        ]);
+
+        return redirect()->route('InicioGuardia')->with('flash_message', 'Entrada registrada exitosamente!');
     }
 
-    public function showSalidaForm($id): View
+    // Show Exit Form
+    public function showSalidaForm($id)
     {
         $empleado = Empleado::findOrFail($id);
         return view('empleados.salida', compact('empleado'));
     }
 
-    public function storeSalida(Request $request, $id): RedirectResponse
+    // Store Exit Data
+    public function storeSalida(Request $request, $id)
     {
         $empleado = Empleado::findOrFail($id);
         $empleado->salida = now();
         $empleado->save();
 
-        return redirect()->route('empleados.log')->with('flash_message', 'Salida registrada exitósamente!');
-    }
+        // Create log entry
+        Log::create([
+            'user_id' => $empleado->id,
+            'user_type' => 'Empleado',
+            'action' => 'Salida',
+            'timestamp' => now(),
+        ]);
 
+        return redirect()->route('InicioGuardia')->with('flash_message', 'Salida registrada exitosamente!');
+    }
+    
     public function log(): View
     {
         $empleados = Empleado::orderBy('updated_at', 'desc')->get();

@@ -1,72 +1,28 @@
-@extends('estudiantes.layout')
+@extends('layouts.app')
 
 @section('content')
-<div class="row">
-    <div class="col-lg-6">
-        <h2>Registrar Salida</h2>
-    </div>
-    <div class="col-lg-6 text-end">
-        <a class="btn btn-primary" href="{{ route('estudiantes.index') }}">Volver al Registro</a>
-    </div>
-</div>
+<div class="container">
+    <h1>Registrar Salida para {{ $estudiante->nombre }} {{ $estudiante->apellidos }}</h1>
 
-<div class="row mt-4">
-    <div class="col-lg-12">
-        <table class="table table-bordered table-striped">
-            <tr>
-                <th>Identificador:</th>
-                <td>{{ $estudiante->identificador }}</td>
-            </tr>
-            <tr>
-                <th>Imagen de Código QR:</th>
-                <td><img src="{{ asset($estudiante->Fotoqr) }}" alt="Código QR de {{ $estudiante->nombre }}" width="100px"></td>
-            </tr>
-            <tr>
-                <th>Foto de Estudiante:</th>
-                <td><img src="{{ asset($estudiante->Foto) }}" alt="Foto de {{ $estudiante->nombre }}" height="100px" width="100px"></td>
-            </tr>
-            <tr>
-                <th>Nombre:</th>
-                <td>{{ $estudiante->nombre }}</td>
-            </tr>
-            <tr>
-                <th>Apellidos:</th>
-                <td>{{ $estudiante->apellidos }}</td>
-            </tr>
-            <tr>
-                <th>Semestre:</th>
-                <td>{{ $estudiante->semestre }}</td>
-            </tr>
-            <tr>
-                <th>Grupo:</th>
-                <td>{{ $estudiante->grupo }}</td>
-            </tr>
-            <tr>
-                <th>Email:</th>
-                <td>{{ $estudiante->email }}</td>
-            </tr>
-            <tr>
-                <th>Entrada:</th>
-                <td>
-                    {{ $estudiante->entrada ? $estudiante->entrada->format('d/m/Y H:i:s') : 'No registrado' }}
-                </td>
-            </tr>
-            <tr>
-                <th>Salida:</th>
-                <td>
-                    {{ $estudiante->salida ? $estudiante->salida->format('d/m/Y H:i:s') : 'No registrado' }}
-                </td>
-            </tr>
-        </table>
-
-        @if($estudiante->entrada && !$estudiante->salida)
-        <form action="{{ route('estudiantes.registerSalida', $estudiante->identificador) }}" method="POST">
-            @csrf
-            <button type="submit" class="btn btn-warning">Registrar Salida</button>
-        </form>
-        @elseif(!$estudiante->entrada)
-        <p class="text-danger">No se puede registrar salida sin entrada.</p>
-        @endif
-    </div>
+    <form action="{{ route('estudiantes.storeSalida', $estudiante->id) }}" method="POST">
+        @csrf
+        <div class="form-group">
+            <label for="identificador">Identificador</label>
+            <input type="text" id="identificador" class="form-control" value="{{ $estudiante->identificador }}" readonly>
+        </div>
+        <div class="form-group">
+            <label for="nombre">Nombre</label>
+            <input type="text" id="nombre" class="form-control" value="{{ $estudiante->nombre }}" readonly>
+        </div>
+        <div class="form-group">
+            <label for="apellidos">Apellidos</label>
+            <input type="text" id="apellidos" class="form-control" value="{{ $estudiante->apellidos }}" readonly>
+        </div>
+        <div class="form-group">
+            <label for="salida">Salida</label>
+            <input type="text" id="salida" class="form-control" value="{{ $estudiante->salida ? $estudiante->salida->format('Y-m-d H:i:s') : 'No registrado' }}" readonly>
+        </div>
+        <button type="submit" class="btn btn-primary">Registrar Salida</button>
+    </form>
 </div>
 @endsection

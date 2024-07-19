@@ -7,17 +7,13 @@ use App\Http\Controllers\ControladorVisitante;
 use App\Http\Controllers\ControladorEscaner;
 use App\Http\Controllers\ControladorGuardia;
 
+// Home Page
 Route::get('/', function () {
     return view('welcome');
 })->name('Inicio');
 
-// Route for QR code scanner page
-Route::get('/scanner', function () {
-    return view('scanner');
-})->name('scanner');
-
 // Security Guard Main Page
-Route::get('/inicio-guardia', [ControladorGuardia::class, 'index'])->name('inicio.guardias');
+Route::get('/inicio-guardia', [ControladorGuardia::class, 'index'])->name('InicioGuardia');
 
 // QR Scanner
 Route::get('/scanner', [ControladorGuardia::class, 'scanner'])->name('scanner');
@@ -25,16 +21,35 @@ Route::get('/scanner', [ControladorGuardia::class, 'scanner'])->name('scanner');
 // Logs
 Route::get('/all/logs', [ControladorGuardia::class, 'allLogs'])->name('all.logs');
 
-// Register Entrada
-Route::post('/register-entrada/{type}', [ControladorGuardia::class, 'registerEntrada'])->name('register.entrada');
+// Route for handling QR code scans
+Route::post('/handle-scan', [ControladorGuardia::class, 'handleScan'])->name('handle.scan');
 
-// Register Salida
-Route::post('/register-salida/{type}', [ControladorGuardia::class, 'registerSalida'])->name('register.salida');
+// Entry and Exit forms
+Route::prefix('estudiantes')->group(function () {
+    Route::get('/entrada/{id}', [ControladorEstudiante::class, 'showEntradaForm'])->name('estudiantes.showEntradaForm');
+    Route::post('/entrada/{id}', [ControladorEstudiante::class, 'storeEntrada'])->name('estudiantes.storeEntrada');
+    Route::get('/salida/{id}', [ControladorEstudiante::class, 'showSalidaForm'])->name('estudiantes.showSalidaForm');
+    Route::post('/salida/{id}', [ControladorEstudiante::class, 'storeSalida'])->name('estudiantes.storeSalida');
+});
 
-// Routes for logs
-Route::get('/estudiantes/log', [ControladorEstudiante::class, 'log'])->name('estudiantes.log');
-Route::get('/empleados/log', [ControladorEmpleado::class, 'log'])->name('empleados.log');
-Route::get('/visitantes/log', [ControladorVisitante::class, 'log'])->name('visitantes.log');
+Route::prefix('empleados')->group(function () {
+    Route::get('/entrada/{id}', [ControladorEmpleado::class, 'showEntradaForm'])->name('empleados.showEntradaForm');
+    Route::post('/entrada/{id}', [ControladorEmpleado::class, 'storeEntrada'])->name('empleados.storeEntrada');
+    Route::get('/salida/{id}', [ControladorEmpleado::class, 'showSalidaForm'])->name('empleados.showSalidaForm');
+    Route::post('/salida/{id}', [ControladorEmpleado::class, 'storeSalida'])->name('empleados.storeSalida');
+});
+
+Route::prefix('visitantes')->group(function () {
+    Route::get('/entrada/{id}', [ControladorVisitante::class, 'showEntradaForm'])->name('visitantes.showEntradaForm');
+    Route::post('/entrada/{id}', [ControladorVisitante::class, 'storeEntrada'])->name('visitantes.storeEntrada');
+    Route::get('/salida/{id}', [ControladorVisitante::class, 'showSalidaForm'])->name('visitantes.showSalidaForm');
+    Route::post('/salida/{id}', [ControladorVisitante::class, 'storeSalida'])->name('visitantes.storeSalida');
+});
+
+// Resourceful routes for CRUD operations
+Route::resource('estudiantes', ControladorEstudiante::class)->except(['show', 'edit', 'destroy']);
+Route::resource('empleados', ControladorEmpleado::class)->except(['show', 'edit', 'destroy']);
+Route::resource('visitantes', ControladorVisitante::class)->except(['show', 'edit', 'destroy']);
 
 // Route to get IP address
 Route::get('/get-ip', function () {
@@ -49,26 +64,7 @@ Route::post('/estudiantes/save-qrcode', [ControladorEstudiante::class, 'saveQRCo
 Route::post('/empleados/save-qrcode', [ControladorEmpleado::class, 'saveQRCode'])->name('empleados.save.qrcode');
 Route::post('/visitantes/save-qrcode', [ControladorVisitante::class, 'saveQRCode'])->name('visitantes.save.qrcode');
 
-// Custom Entrada and Salida routes for Estudiantes, Empleados, and Visitantes
-Route::get('/estudiantes/entrada/{id}', [ControladorEstudiante::class, 'showEntradaForm'])->name('estudiantes.entrada');
-Route::post('/estudiantes/entrada/{id}', [ControladorEstudiante::class, 'storeEntrada'])->name('estudiantes.storeEntrada');
-Route::get('/estudiantes/salida/{id}', [ControladorEstudiante::class, 'showSalidaForm'])->name('estudiantes.salida');
-Route::post('/estudiantes/salida/{id}', [ControladorEstudiante::class, 'storeSalida'])->name('estudiantes.storeSalida');
+// Logs routes
 Route::get('/estudiantes/log', [ControladorEstudiante::class, 'log'])->name('estudiantes.log');
-
-Route::get('/empleados/entrada/{id}', [ControladorEmpleado::class, 'showEntradaForm'])->name('empleados.entrada');
-Route::post('/empleados/entrada/{id}', [ControladorEmpleado::class, 'storeEntrada'])->name('empleados.storeEntrada');
-Route::get('/empleados/salida/{id}', [ControladorEmpleado::class, 'showSalidaForm'])->name('empleados.salida');
-Route::post('/empleados/salida/{id}', [ControladorEmpleado::class, 'storeSalida'])->name('empleados.storeSalida');
 Route::get('/empleados/log', [ControladorEmpleado::class, 'log'])->name('empleados.log');
-
-Route::get('/visitantes/entrada/{id}', [ControladorVisitante::class, 'showEntradaForm'])->name('visitantes.entrada');
-Route::post('/visitantes/entrada/{id}', [ControladorVisitante::class, 'storeEntrada'])->name('visitantes.storeEntrada');
-Route::get('/visitantes/salida/{id}', [ControladorVisitante::class, 'showSalidaForm'])->name('visitantes.salida');
-Route::post('/visitantes/salida/{id}', [ControladorVisitante::class, 'storeSalida'])->name('visitantes.storeSalida');
 Route::get('/visitantes/log', [ControladorVisitante::class, 'log'])->name('visitantes.log');
-
-// Resourceful routes for CRUD operations
-Route::resource('estudiantes', ControladorEstudiante::class)->except(['show', 'edit', 'destroy']);
-Route::resource('empleados', ControladorEmpleado::class)->except(['show', 'edit', 'destroy']);
-Route::resource('visitantes', ControladorVisitante::class)->except(['show', 'edit', 'destroy']);

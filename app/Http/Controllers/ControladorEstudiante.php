@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\EstudianteQR;
+use App\Models\Log;
 
 class ControladorEstudiante extends Controller
 {
@@ -138,28 +139,59 @@ class ControladorEstudiante extends Controller
         }
     }
 
-    // New Methods for Entry and Exit
-    public function registerEntrada($id)
+    public function log(): View
+    {
+        $estudiantes = Estudiante::orderBy('updated_at', 'desc')->get();
+        return view('estudiantes.log', compact('estudiantes'));
+    }
+
+    // Show Entry Form
+    public function showEntradaForm($id)
+    {
+        $estudiante = Estudiante::findOrFail($id);
+        return view('estudiantes.entrada', compact('estudiante'));
+    }
+
+    // Store Entry Data
+    public function storeEntrada(Request $request, $id)
     {
         $estudiante = Estudiante::findOrFail($id);
         $estudiante->entrada = now();
         $estudiante->save();
 
-        return redirect()->route('InicioGuardia')->with('success', 'Entrada registrada exitosamente.');
+        // Create log entry
+        Log::create([
+            'user_id' => $estudiante->id,
+            'user_type' => 'Estudiante',
+            'action' => 'Entrada',
+            'timestamp' => now(),
+        ]);
+
+        return redirect()->route('InicioGuardia')->with('flash_message', 'Entrada registrada exitosamente!');
     }
 
-    public function registerSalida($id)
+    // Show Exit Form
+    public function showSalidaForm($id)
+    {
+        $estudiante = Estudiante::findOrFail($id);
+        return view('estudiantes.salida', compact('estudiante'));
+    }
+
+    // Store Exit Data
+    public function storeSalida(Request $request, $id)
     {
         $estudiante = Estudiante::findOrFail($id);
         $estudiante->salida = now();
         $estudiante->save();
 
-        return redirect()->route('InicioGuardia')->with('success', 'Salida registrada exitosamente.');
-    }
-    
-    public function log(): View
-    {
-        $estudiantes = Estudiante::orderBy('updated_at', 'desc')->get();
-        return view('estudiantes.log', compact('estudiantes'));
+        // Create log entry
+        Log::create([
+            'user_id' => $estudiante->id,
+            'user_type' => 'Estudiante',
+            'action' => 'Salida',
+            'timestamp' => now(),
+        ]);
+
+        return redirect()->route('InicioGuardia')->with('flash_message', 'Salida registrada exitosamente!');
     }
 }

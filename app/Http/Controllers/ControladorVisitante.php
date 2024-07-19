@@ -9,7 +9,7 @@ use Illuminate\View\View;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\VisitanteQR;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use App\Models\Log;
 
 class ControladorVisitante extends Controller
 {
@@ -141,49 +141,60 @@ class ControladorVisitante extends Controller
         }
     }
 
-    public function showEntradaForm($id): View
+    // Show Entry Form for Visitor
+    public function showEntradaForm($id)
     {
         $visitante = Visitante::findOrFail($id);
         return view('visitantes.entrada', compact('visitante'));
     }
 
-    public function storeEntrada(Request $request, $id): RedirectResponse
+    // Store Entry Data for Visitor
+    public function storeEntrada(Request $request, $id)
     {
-        try {
-            $visitante = Visitante::findOrFail($id);
-            $visitante->entrada = now();
-            $visitante->save();
+        $visitante = Visitante::findOrFail($id);
+        $visitante->entrada = now();
+        $visitante->save();
 
-            return redirect()->route('visitantes.log')->with('flash_message', 'Entrada registrada exitósamente!');
-        } catch (\Exception $e) {
-            Log::error('Error storing entrada for visitante ' . $id . ': ' . $e->getMessage());
-            return redirect()->route('visitantes.log')->withErrors(['error' => 'Error storing entrada.']);
-        }
+        // Create log entry
+        Log::create([
+            'user_id' => $visitante->id,
+            'user_type' => 'Visitante',
+            'action' => 'Entrada',
+            'timestamp' => now(),
+        ]);
+
+        return redirect()->route('InicioGuardia')->with('flash_message', 'Entrada registrada exitosamente!');
     }
 
-    public function showSalidaForm($id): View
+    // Show Exit Form for Visitor
+    public function showSalidaForm($id)
     {
         $visitante = Visitante::findOrFail($id);
         return view('visitantes.salida', compact('visitante'));
     }
 
-    public function storeSalida(Request $request, $id): RedirectResponse
+    // Store Exit Data for Visitor
+    public function storeSalida(Request $request, $id)
     {
-        try {
-            $visitante = Visitante::findOrFail($id);
-            $visitante->salida = now();
-            $visitante->save();
+        $visitante = Visitante::findOrFail($id);
+        $visitante->salida = now();
+        $visitante->save();
 
-            return redirect()->route('visitantes.log')->with('flash_message', 'Salida registrada exitósamente!');
-        } catch (\Exception $e) {
-            Log::error('Error storing salida for visitante ' . $id . ': ' . $e->getMessage());
-            return redirect()->route('visitantes.log')->withErrors(['error' => 'Error storing salida.']);
-        }
+        // Create log entry
+        Log::create([
+            'user_id' => $visitante->id,
+            'user_type' => 'Visitante',
+            'action' => 'Salida',
+            'timestamp' => now(),
+        ]);
+
+        return redirect()->route('InicioGuardia')->with('flash_message', 'Salida registrada exitosamente!');
     }
-
+    
     public function log(): View
     {
         $visitantes = Visitante::orderBy('updated_at', 'desc')->get();
         return view('visitantes.log', compact('visitantes'));
     }
+
 }
