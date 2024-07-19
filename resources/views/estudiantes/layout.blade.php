@@ -3,5 +3,7 @@
 @section('title', 'Sistema de Registro de Estudiantes')
 
 @section('content')
-    @yield('content')
+    <div class="container">
+        @yield('content')
+    </div>
 @endsection

@@ -1,4 +1,5 @@
 @extends('estudiantes.layout')
+
 @section('content')
 <div class="card">
     <div class="card-header">Registrar Nuevo Estudiante</div>
@@ -42,18 +43,8 @@
             </div>
 
             <div class="form-group">
-                <label for="entrada">Entrada</label>
-                <input type="date" class="form-control" id="entrada" name="entrada">
-            </div>
-
-            <div class="form-group">
-                <label for="salida">Salida</label>
-                <input type="date" class="form-control" id="salida" name="salida">
-            </div>
-
-            <div class="form-group">
-                <h1> Codigo QR</h1>
-                <button type="button" id="generateQR" class="btn btn-primary">Generar QR Code</button>
+                <h1>Código QR</h1>
+                <button type="button" id="generateQR" class="btn btn-primary" disabled>Generar QR Code</button>
             </div>
             <!-- QR Code Display Area -->
             <div id="qrCodeDisplay" class="mb-3"></div>            
@@ -71,32 +62,42 @@ document.addEventListener('DOMContentLoaded', function () {
     const generateQR = document.getElementById('generateQR');
     const qrCodeDisplay = document.getElementById('qrCodeDisplay');
     const qrCodeDataInput = document.getElementById('qrCodeData');
+    const identificadorInput = document.getElementById('identificador');
 
-    generateQR.addEventListener('click', function() {
-        const identificadorValue = document.getElementById('identificador').value; // Assuming 'identificador' is the identifier field
+    function updateButtonState() {
+        generateQR.disabled = !identificadorInput.value.trim();
+    }
 
-        if (identificadorValue) {
-            // Construct URL dynamically
-            const baseURL = 'http://192.168.1.76:8000'; // Replace '192.168.1.100' with your actual IPv4 address
-            const redirectURL = `${baseURL}/estudiantes/show/${identificadorValue}`;
-            console.log('Redirect URL:', redirectURL); // Debugging line
+    identificadorInput.addEventListener('input', updateButtonState);
 
-            // Create QR code instance
-            const typeNumber = 4; // Example: adjust as needed
-            const errorCorrectionLevel = 'L'; // Example: adjust as needed
-            const qr = qrcode(typeNumber, errorCorrectionLevel);
-            qr.addData(redirectURL);
-            qr.make();
+    fetch('/get-ip')
+        .then(response => response.json())
+        .then(data => {
+            const ip = data.ip;
 
-            // Display QR code
-            qrCodeDisplay.innerHTML = qr.createImgTag(10); // Example: adjust size
+            generateQR.addEventListener('click', function() {
+                const identificadorValue = identificadorInput.value;
 
-            // Store QR code data in hidden input field
-            qrCodeDataInput.value = qr.createDataURL(10); // Store as data URL
-        } else {
-            alert('Please enter data before generating QR code.');
-        }
-    });
+                if (identificadorValue) {
+                    const baseURL = `http://${ip}:8000`; // Adjust based on deployment
+                    const redirectURL = `${baseURL}/estudiantes/show/${identificadorValue}`;
+                    console.log('Redirect URL:', redirectURL);
+
+                    const typeNumber = 4;
+                    const errorCorrectionLevel = 'L';
+                    const qr = qrcode(typeNumber, errorCorrectionLevel);
+                    qr.addData(redirectURL);
+                    qr.make();
+
+                    qrCodeDisplay.innerHTML = qr.createImgTag(10);
+
+                    qrCodeDataInput.value = qr.createDataURL(10);
+                } else {
+                    alert('Por favor, ingresa el identificador antes de generar el código QR.');
+                }
+            });
+        })
+        .catch(error => console.error('Error fetching IP:', error));
 });
 </script>
 @endsection

@@ -7,7 +7,7 @@
             <center><img src="{{ asset('imagenes/Fondo.jpg') }}" alt="Banner Image" style="width: 700px; height: 350px;"> </center>
         </section>
         <section id="bienvenida" style="background-color: #ff63dd; padding: 10px; color: #0c0c0c;">
-            <center><h1>Bienvenidos a SAIIUT</h1> </center>
+            <center><h1>Bienvenidos a Acceso UTSC</h1> </center>
             <h2>SAIIUT es un acronimo para Sistema Automatizado Integral de Información de las Universidades Tecnológicas., es decir,<br> Un sistema de información para universidades basadas en tecnologia y 
                 <br> en este caso una herramienta para mantener el control de los estudiantes,empleados y visitantes para el plantel <br>para este proyecto seria el registro de personas que entren a la universidad<br> 
                 para eso creamos estas tablas para hacer el registro manual de ellas.

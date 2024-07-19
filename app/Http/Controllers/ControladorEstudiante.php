@@ -14,7 +14,7 @@ class ControladorEstudiante extends Controller
 {
     public function index(): View
     {
-        $estudiantes = Estudiante::paginate(10); // Ejemplo: paginar cada 10 resultados
+        $estudiantes = Estudiante::paginate(10); // Pagination for 10 results per page
         return view('estudiantes.index', compact('estudiantes'));
     }
 
@@ -26,16 +26,15 @@ class ControladorEstudiante extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validatedData = $request->validate([
-            'Foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',   // Adjusted to image validation
+            'Foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'identificador' => 'required|string|max:255',
             'nombre' => 'required|string|max:255',
             'apellidos' => 'required|string|max:255',
             'semestre' => 'required|string|max:255',
             'grupo' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:estudiantes',
-            'entrada' => 'nullable|date',
-            'salida' => 'nullable|date',
         ]);
+
         // Handle Foto upload
         if ($request->hasFile('Foto')) {
             $imagen = $request->file('Foto');
@@ -44,6 +43,7 @@ class ControladorEstudiante extends Controller
             $validatedData['Foto'] = 'FotosEstudiantes/' . $nombreImagen;
         }
 
+        // Handle QR Code
         if ($request->filled('qrCodeData')) {
             $qrCodeData = $request->input('qrCodeData');
             $qrCodePath = $this->saveQRCode($qrCodeData);
@@ -55,7 +55,8 @@ class ControladorEstudiante extends Controller
 
         // Send email with QR code attached
         $this->sendQRCodeByEmail($estudiante);
-        return redirect()->route('estudiantes.index')->with('flash_message', 'Estudiante dado de alta exitósamente!');
+
+        return redirect()->route('securityguardmainpage')->with('flash_message', 'Estudiante dado de alta exitósamente!');
     }
 
     public function show($identificador): View
@@ -73,17 +74,16 @@ class ControladorEstudiante extends Controller
     public function update(Request $request, Estudiante $estudiante): RedirectResponse
     {
         $validatedData = $request->validate([
-            'Fotoqr' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',   // Adjusted to image validation
-            'Foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',   // Adjusted to image validation
+            'Fotoqr' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'Foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'identificador' => 'required|string|max:255',
             'nombre' => 'required|string|max:255',
             'apellidos' => 'required|string|max:255',
             'semestre' => 'required|string|max:255',
             'grupo' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:estudiantes,email,' . $estudiante->id,
-            'entrada' => 'nullable|date',
-            'salida' => 'nullable|date',
         ]);
+
         // Handle Foto upload
         if ($request->hasFile('Foto')) {
             $imagen = $request->file('Foto');
@@ -92,29 +92,27 @@ class ControladorEstudiante extends Controller
             $validatedData['Foto'] = 'FotosEstudiantes/' . $nombreImagen;
         }
 
+        // Handle QR Code
         if ($request->filled('qrCodeData')) {
             $qrCodeData = $request->input('qrCodeData');
             $qrCodePath = $this->saveQRCode($qrCodeData);
             $validatedData['Fotoqr'] = $qrCodePath;
         }
 
-        // Create student record
+        // Update student record
         $estudiante->update($validatedData);
 
         // Send email with QR code attached
         $this->sendQRCodeByEmail($estudiante);
 
-        // Generate QR code path and update the record
-        //$qrCodePath = $this->generateQRCodePath($estudiante->identificador); // Example function to generate QR code path
-
-        return redirect()->route('estudiantes.index')->with('flash_message', 'Registro de estudiante actualizado exitósamente!');
+        return redirect()->route('securityguardmainpage')->with('flash_message', 'Registro de estudiante actualizado exitósamente!');
     }
 
     public function destroy($identificador): RedirectResponse
     {
         $estudiante = Estudiante::where('identificador', $identificador)->firstOrFail();
         $estudiante->delete();
-        return redirect()->route('estudiantes.index')->with('flash_message', 'Registro de estudiante eliminado exitósamente!');
+        return redirect()->route('securityguardmainpage')->with('flash_message', 'Registro de estudiante eliminado exitósamente!');
     }
 
     private function saveQRCode($qrCodeData)
@@ -126,9 +124,6 @@ class ControladorEstudiante extends Controller
         return $qrCodePath;
     }
 
-    /**
-     * Send QR code to visitante's email address.
-     */
     private function sendQRCodeByEmail(Estudiante $estudiante)
     {
         $email = $estudiante->email;
@@ -142,5 +137,29 @@ class ControladorEstudiante extends Controller
             Mail::to($email)->send(new EstudianteQR($estudiante->Fotoqr));
         }
     }
+
+    // New Methods for Entry and Exit
+    public function registerEntrada($id)
+    {
+        $estudiante = Estudiante::findOrFail($id);
+        $estudiante->entrada = now();
+        $estudiante->save();
+
+        return redirect()->route('InicioGuardia')->with('success', 'Entrada registrada exitosamente.');
+    }
+
+    public function registerSalida($id)
+    {
+        $estudiante = Estudiante::findOrFail($id);
+        $estudiante->salida = now();
+        $estudiante->save();
+
+        return redirect()->route('InicioGuardia')->with('success', 'Salida registrada exitosamente.');
+    }
     
+    public function log(): View
+    {
+        $estudiantes = Estudiante::orderBy('updated_at', 'desc')->get();
+        return view('estudiantes.log', compact('estudiantes'));
+    }
 }

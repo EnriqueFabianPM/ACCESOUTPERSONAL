@@ -55,38 +55,38 @@
 <!-- Include qrcode-generator library -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const generateQR = document.getElementById('generateQR');
-        const qrCodeDisplay = document.getElementById('qrCodeDisplay');
-        const qrCodeDataInput = document.getElementById('qrCodeData');
-    
-        if (generateQR) {
+document.addEventListener('DOMContentLoaded', function () {
+    const generateQR = document.getElementById('generateQR');
+    const qrCodeDisplay = document.getElementById('qrCodeDisplay');
+    const qrCodeDataInput = document.getElementById('qrCodeData');
+
+    fetch('/get-ip')
+        .then(response => response.json())
+        .then(data => {
+            const ip = data.ip;
+
             generateQR.addEventListener('click', function() {
-                const identificadorValue = document.getElementById('identificador').value; // Assuming 'identificador' is the identifier field
-    
+                const identificadorValue = document.getElementById('identificador').value;
+
                 if (identificadorValue) {
-                    // Construct URL dynamically
-                    const baseURL = 'http://192.168.1.76:8000'; // Replace with your actual IPv4 address
+                    const baseURL = `http://${ip}:8000`; // Dynamically set IP address
                     const redirectURL = `${baseURL}/visitantes/show/${identificadorValue}`;
-                    console.log('Redirect URL:', redirectURL); // Debugging line
-    
-                    // Create QR code instance
-                    const typeNumber = 4; // Example: adjust as needed
-                    const errorCorrectionLevel = 'L'; // Example: adjust as needed
+                    console.log('Redirect URL:', redirectURL);
+
+                    const typeNumber = 4;
+                    const errorCorrectionLevel = 'L';
                     const qr = qrcode(typeNumber, errorCorrectionLevel);
                     qr.addData(redirectURL);
                     qr.make();
-    
-                    // Display QR code
-                    qrCodeDisplay.innerHTML = qr.createImgTag(10); // Example: adjust size
-    
-                    // Store QR code data in hidden input field
-                    qrCodeDataInput.value = qr.createDataURL(10); // Store as data URL
+
+                    qrCodeDisplay.innerHTML = qr.createImgTag(10);
+
+                    qrCodeDataInput.value = qr.createDataURL(10);
                 } else {
-                    alert('Please enter data before generating QR code.');
+                    alert('Please enter the identifier before generating QR code.');
                 }
             });
-        }
-    });
+        });
+});
 </script>
 @endsection

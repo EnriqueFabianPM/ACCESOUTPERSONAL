@@ -3,35 +3,27 @@
 namespace App\Http\Controllers;
 
 use App\Models\Visitante;
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\VisitanteQR;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ControladorVisitante extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(): View
     {
         $visitantes = Visitante::paginate(10);
         return view('visitantes.index', compact('visitantes'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create(): View
     {
         return view('visitantes.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request): RedirectResponse
     {
         $validatedData = $request->validate([
@@ -41,47 +33,42 @@ class ControladorVisitante extends Controller
             'motivo' => 'required|string|max:255',
             'telefono' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:visitantes',
-            'entrada' => 'nullable|date',
-            'salida' => 'nullable|date',
         ]);
 
-        // Create visitante record
-        $visitante = Visitante::create($validatedData);
+        try {
+            DB::beginTransaction();
 
-        // Save QR code if provided
-        if ($request->filled('qrCodeData')) {
-            $qrCodeData = $request->input('qrCodeData');
-            $qrCodePath = $this->saveQRCode($qrCodeData);
-            $visitante->update(['Fotoqr' => $qrCodePath]);
+            $visitante = Visitante::create($validatedData);
+
+            if ($request->filled('qrCodeData')) {
+                $qrCodeData = $request->input('qrCodeData');
+                $qrCodePath = $this->saveQRCode($qrCodeData);
+                $visitante->update(['Fotoqr' => $qrCodePath]);
+            }
+
+            $this->sendQRCodeByEmail($visitante);
+
+            DB::commit();
+            return redirect()->route('visitantes.index')->with('flash_message', 'Visitante dado de alta exitosamente!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error creating visitante: ' . $e->getMessage());
+            return redirect()->route('visitantes.create')->withErrors(['error' => 'Error creating visitante.']);
         }
-
-        // Send email with QR code attached
-        $this->sendQRCodeByEmail($visitante);
-
-        return redirect()->route('visitantes.index')->with('flash_message', 'Visitante dado de alta exitosamente!');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show($identificador): View
     {
         $visitante = Visitante::where('identificador', $identificador)->firstOrFail();
         return view('visitantes.show', compact('visitante'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit($identificador): View
     {
         $visitante = Visitante::where('identificador', $identificador)->firstOrFail();
         return view('visitantes.edit', compact('visitante'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Visitante $visitante): RedirectResponse
     {
         $validatedData = $request->validate([
@@ -91,39 +78,42 @@ class ControladorVisitante extends Controller
             'motivo' => 'required|string|max:255',
             'telefono' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:visitantes,email,' . $visitante->id,
-            'entrada' => 'nullable|date',
-            'salida' => 'nullable|date',
         ]);
 
-        // Update visitante record
-        $visitante->update($validatedData);
+        try {
+            DB::beginTransaction();
 
-        // Save QR code if provided
-        if ($request->filled('qrCodeData')) {
-            $qrCodeData = $request->input('qrCodeData');
-            $qrCodePath = $this->saveQRCode($qrCodeData);
-            $visitante->update(['Fotoqr' => $qrCodePath]);
+            $visitante->update($validatedData);
+
+            if ($request->filled('qrCodeData')) {
+                $qrCodeData = $request->input('qrCodeData');
+                $qrCodePath = $this->saveQRCode($qrCodeData);
+                $visitante->update(['Fotoqr' => $qrCodePath]);
+            }
+
+            $this->sendQRCodeByEmail($visitante);
+
+            DB::commit();
+            return redirect()->route('visitantes.index')->with('flash_message', 'Registro de visitante actualizado exitosamente!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error updating visitante: ' . $e->getMessage());
+            return redirect()->route('visitantes.edit', ['visitante' => $visitante])->withErrors(['error' => 'Error updating visitante.']);
         }
-
-        // Send email with QR code attached
-        $this->sendQRCodeByEmail($visitante);
-
-        return redirect()->route('visitantes.index')->with('flash_message', 'Registro de visitante actualizado exitosamente!');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy($identificador): RedirectResponse
     {
-        $visitante = Visitante::where('identificador', $identificador)->firstOrFail();
-        $visitante->delete();
-        return redirect()->route('visitantes.index')->with('flash_message', 'Registro de visitante eliminado exitosamente!');
+        try {
+            $visitante = Visitante::where('identificador', $identificador)->firstOrFail();
+            $visitante->delete();
+            return redirect()->route('visitantes.index')->with('flash_message', 'Registro de visitante eliminado exitosamente!');
+        } catch (\Exception $e) {
+            Log::error('Error deleting visitante: ' . $e->getMessage());
+            return redirect()->route('visitantes.index')->withErrors(['error' => 'Error deleting visitante.']);
+        }
     }
 
-    /**
-     * Save QR code image to public directory.
-     */
     private function saveQRCode($qrCodeData)
     {
         $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $qrCodeData));
@@ -133,20 +123,67 @@ class ControladorVisitante extends Controller
         return $qrCodePath;
     }
 
-    /**
-     * Send QR code to visitante's email address.
-     */
     private function sendQRCodeByEmail(Visitante $visitante)
     {
         $email = $visitante->email;
         $domain = substr(strrchr($email, "@"), 1);
 
-        if ($domain === 'gmail.com' || $domain === 'googlemail.com') {
-            Mail::mailer('smtp')->to($email)->send(new VisitanteQR($visitante->Fotoqr));
-        } elseif (in_array($domain, ['outlook.com', 'hotmail.com', 'live.com'])) {
-            Mail::mailer('smtp_outlook')->to($email)->send(new VisitanteQR($visitante->Fotoqr));
-        } else {
-            Mail::to($email)->send(new VisitanteQR($visitante->Fotoqr));
+        try {
+            if ($domain === 'gmail.com' || $domain === 'googlemail.com') {
+                Mail::mailer('smtp')->to($email)->send(new VisitanteQR($visitante->Fotoqr));
+            } elseif (in_array($domain, ['outlook.com', 'hotmail.com', 'live.com'])) {
+                Mail::mailer('smtp_outlook')->to($email)->send(new VisitanteQR($visitante->Fotoqr));
+            } else {
+                Mail::to($email)->send(new VisitanteQR($visitante->Fotoqr));
+            }
+        } catch (\Exception $e) {
+            Log::error('Error sending email to ' . $email . ': ' . $e->getMessage());
         }
+    }
+
+    public function showEntradaForm($id): View
+    {
+        $visitante = Visitante::findOrFail($id);
+        return view('visitantes.entrada', compact('visitante'));
+    }
+
+    public function storeEntrada(Request $request, $id): RedirectResponse
+    {
+        try {
+            $visitante = Visitante::findOrFail($id);
+            $visitante->entrada = now();
+            $visitante->save();
+
+            return redirect()->route('visitantes.log')->with('flash_message', 'Entrada registrada exitósamente!');
+        } catch (\Exception $e) {
+            Log::error('Error storing entrada for visitante ' . $id . ': ' . $e->getMessage());
+            return redirect()->route('visitantes.log')->withErrors(['error' => 'Error storing entrada.']);
+        }
+    }
+
+    public function showSalidaForm($id): View
+    {
+        $visitante = Visitante::findOrFail($id);
+        return view('visitantes.salida', compact('visitante'));
+    }
+
+    public function storeSalida(Request $request, $id): RedirectResponse
+    {
+        try {
+            $visitante = Visitante::findOrFail($id);
+            $visitante->salida = now();
+            $visitante->save();
+
+            return redirect()->route('visitantes.log')->with('flash_message', 'Salida registrada exitósamente!');
+        } catch (\Exception $e) {
+            Log::error('Error storing salida for visitante ' . $id . ': ' . $e->getMessage());
+            return redirect()->route('visitantes.log')->withErrors(['error' => 'Error storing salida.']);
+        }
+    }
+
+    public function log(): View
+    {
+        $visitantes = Visitante::orderBy('updated_at', 'desc')->get();
+        return view('visitantes.log', compact('visitantes'));
     }
 }

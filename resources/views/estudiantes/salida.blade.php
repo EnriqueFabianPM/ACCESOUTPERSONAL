@@ -1,17 +1,17 @@
 @extends('estudiantes.layout')
 
 @section('content')
-<div class="row mb-4">
+<div class="row">
     <div class="col-lg-6">
-        <h2>Mostrar Información de Estudiante</h2>
+        <h2>Registrar Salida</h2>
     </div>
     <div class="col-lg-6 text-end">
         <a class="btn btn-primary" href="{{ route('estudiantes.index') }}">Volver al Registro</a>
     </div>
 </div>
 
-<div class="row">
-    <div class="col-lg-6">
+<div class="row mt-4">
+    <div class="col-lg-12">
         <table class="table table-bordered table-striped">
             <tr>
                 <th>Identificador:</th>
@@ -19,23 +19,11 @@
             </tr>
             <tr>
                 <th>Imagen de Código QR:</th>
-                <td>
-                    @if($estudiante->Fotoqr)
-                        <img src="{{ asset($estudiante->Fotoqr) }}" alt="Código QR de {{ $estudiante->nombre }}" width="100">
-                    @else
-                        No disponible
-                    @endif
-                </td>
+                <td><img src="{{ asset($estudiante->Fotoqr) }}" alt="Código QR de {{ $estudiante->nombre }}" width="100px"></td>
             </tr>
             <tr>
                 <th>Foto de Estudiante:</th>
-                <td>
-                    @if($estudiante->Foto)
-                        <img src="{{ asset($estudiante->Foto) }}" alt="Foto de {{ $estudiante->nombre }}" height="100" width="100">
-                    @else
-                        No disponible
-                    @endif
-                </td>
+                <td><img src="{{ asset($estudiante->Foto) }}" alt="Foto de {{ $estudiante->nombre }}" height="100px" width="100px"></td>
             </tr>
             <tr>
                 <th>Nombre:</th>
@@ -57,7 +45,28 @@
                 <th>Email:</th>
                 <td>{{ $estudiante->email }}</td>
             </tr>
+            <tr>
+                <th>Entrada:</th>
+                <td>
+                    {{ $estudiante->entrada ? $estudiante->entrada->format('d/m/Y H:i:s') : 'No registrado' }}
+                </td>
+            </tr>
+            <tr>
+                <th>Salida:</th>
+                <td>
+                    {{ $estudiante->salida ? $estudiante->salida->format('d/m/Y H:i:s') : 'No registrado' }}
+                </td>
+            </tr>
         </table>
+
+        @if($estudiante->entrada && !$estudiante->salida)
+        <form action="{{ route('estudiantes.registerSalida', $estudiante->identificador) }}" method="POST">
+            @csrf
+            <button type="submit" class="btn btn-warning">Registrar Salida</button>
+        </form>
+        @elseif(!$estudiante->entrada)
+        <p class="text-danger">No se puede registrar salida sin entrada.</p>
+        @endif
     </div>
 </div>
 @endsection

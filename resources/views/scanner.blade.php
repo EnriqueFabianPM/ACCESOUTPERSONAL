@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Escaneo de Codigo QR')
+@section('title', 'Escaneo de Código QR')
 
 @section('content')
     <div class="container mt-4">
-        <center><h1>Escanear Codigo QR para entrar a la universidad</h1></center>
+        <center><h1>Escanear Código QR para Entrar a la Universidad</h1></center>
         <div class="form-group mt-5">
             <label for="qrInput">Coloque el cursor en el campo de abajo y escanee el Código QR:</label>
             <input type="text" id="qrInput" class="form-control" autofocus>
@@ -24,17 +24,20 @@
                     let scannedData = qrInput.value.trim();
                     console.log('Scanned Data:', scannedData); // For debugging purposes
 
-                    // Adjust the scanned data format if necessary
-                    scannedData = scannedData.replace(/>/g, ':').replace(/&/g, '/').replace(/^http:\/\//, 'http://').replace(/^http>/, 'http://').replace(/^http>&&/, 'http://');
+                    // Process the scanned data
+                    scannedData = scannedData
+                        .replace(/>/g, ':')
+                        .replace(/&/g, '/')
+                        .replace(/^http:\/\//, 'http://')
+                        .replace(/^http>/, 'http://')
+                        .replace(/^http>&&/, 'http://');
 
                     console.log('Processed Data:', scannedData); // For debugging purposes
 
-                    if (scannedData.includes('estudiantes/show/')) {
-                        window.location.href = scannedData;
-                    } else if (scannedData.includes('empleados/show/')) {
-                        window.location.href = scannedData;
-                    } else if (scannedData.includes('visitantes/show/')) {
-                        window.location.href = scannedData;
+                    if (scannedData) {
+                        // Make sure the URL is correctly formatted
+                        const url = `{{ url('/scan') }}/${encodeURIComponent(scannedData)}`;
+                        window.location.href = url;
                     } else {
                         alert('Error: Código QR inválido, por favor ingrese nuevamente.');
                         qrInput.value = '';
