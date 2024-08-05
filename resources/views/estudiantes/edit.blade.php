@@ -12,7 +12,6 @@
                 <label for="identificador">Identificador:</label>
                 <input type="text" class="form-control" id="identificador" name="identificador" value="{{ $estudiante->identificador }}" required>
             </div>
-
             <div class="form-group">
                 <label for="Fotoqr">Imagen de Codigo QR</label>
                 <div>
@@ -21,7 +20,6 @@
                     @endif
                 </div>
             </div>
-
             <div class="form-group">
                 <label for="Foto">Foto de Estudiante</label>
                 <div>
@@ -31,38 +29,39 @@
                 </div>
                 <input type="file" class="form-control" id="Foto" name="Foto">
             </div>
-
-            <div class="form-group">
                 <label for="nombre">Nombre:</label>
                 <input type="text" class="form-control" id="nombre" name="nombre" value="{{ $estudiante->nombre }}" required>
             </div>
-
             <div class="form-group">
                 <label for="apellidos">Apellidos:</label>
                 <input type="text" class="form-control" id="apellidos" name="apellidos" value="{{ $estudiante->apellidos }}" required>
             </div>
-
             <div class="form-group">
                 <label for="semestre">Semestre:</label>
                 <input type="text" class="form-control" id="semestre" name="semestre" value="{{ $estudiante->semestre }}" required>
             </div>
-
             <div class="form-group">
                 <label for="grupo">Grupo:</label>
                 <input type="text" class="form-control" id="grupo" name="grupo" value="{{ $estudiante->grupo }}" required>
             </div>
-
             <div class="form-group">
                 <label for="email">E-mail:</label>
                 <input type="email" class="form-control" id="email" name="email" value="{{ $estudiante->email }}" required>
             </div>
-
             <div class="form-group">
-                <label for="Fotoqr">Generar nuevo Código QR</label>
-                <button type="button" id="generateQR" class="btn btn-primary" disabled>Generar QR</button>
+                <label for="entrada">Entrada:</label>
+                <input type="date" class="form-control" id="entrada" name="entrada" value="{{ $estudiante->entrada }}">
+            </div>
+            <div class="form-group">
+                <label for="salida">Salida:</label>
+                <input type="date" class="form-control" id="salida" name="salida" value="{{ $estudiante->salida }}">
+            </div>
+            <div class="form-group">
+                <label for="Fotoqr">Generar nuevo Codigo QR</label>
+                <button type="button" id="generateQR" class="btn btn-primary">Generar QR</button>
 
                 <!-- QR Code Display Area -->
-                <h1>Código QR Nuevo</h1>
+                <h1> Codigo QR Nuevo</h1>
                 <div id="qrCodeDisplay" class="mb-3"></div>            
                 <input type="hidden" name="qrCodeData" id="qrCodeData">
             </div>
@@ -71,7 +70,6 @@
         </form>
     </div>
 </div>
-
 <!-- Include qrcode-generator library -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script>
 <script>

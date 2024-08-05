@@ -6,7 +6,7 @@
             <div class="card">
                 <div class="card-header">
                     <h2>Sistema de Registro de Visitante UTSC</h2>
-                    <center><a href="{{ route('Inicio') }}" style="background-color: #010201; padding: 10px;" class="btn btn-primary btn-lg mr-3">Volver al Inicio</a></center>
+                    <center><a href="{{ route('home') }}" style="background-color: #010201; padding: 10px;" class="btn btn-primary btn-lg mr-3">Volver al Inicio</a></center>
                 </div>
                 <div class="card-body">
                     <a href="{{ route('visitantes.create') }}" class="btn btn-success btn-sm mb-3"
@@ -25,6 +25,8 @@
                                     <th>Motivo de Visita</th>
                                     <th>Telefono</th>
                                     <th>Email</th>
+                                    <th>Entrada</th>
+                                    <th>Salida</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -44,6 +46,8 @@
                                     <td>{{ $visitante->motivo }}</td>
                                     <td>{{ $visitante->telefono }}</td>
                                     <td>{{ $visitante->email }}</td>
+                                    <td>{{ $visitante->entrada }}</td>
+                                    <td>{{ $visitante->salida }}</td>
                                     <td>
                                         <a href="{{ route('visitantes.show', $visitante->identificador) }}"
                                             class="btn btn-info btn-sm" title="Ver Visitante">

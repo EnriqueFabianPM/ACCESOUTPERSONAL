@@ -1,4 +1,5 @@
 @extends('empleados.layout')
+
 @section('content')
 <div class="card">
     <div class="card-header">Editar Información de Estudiante</div>
@@ -14,7 +15,7 @@
             <div class="form-group">
                 <label for="Fotoqr">Imagen de Codigo QR</label>
                 <div>
-                    @if($visitante->Fotoqr)
+                    @if($empleado->Fotoqr)
                         <img src="{{ asset($empleado->Fotoqr) }}" alt="Imagen QR" style="max-width: 200px; max-height: 200px;">
                     @endif
                 </div>
@@ -70,7 +71,6 @@
         </form>
     </div>
 </div>
-
 <!-- Include qrcode-generator library -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script>
 <script>

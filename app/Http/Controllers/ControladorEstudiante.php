@@ -3,21 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Models\Estudiante;
-use App\Models\EstudiantesLog;
-use App\Models\Log; // Import the centralized log model
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Auth; // Import Auth facade
 use App\Mail\EstudianteQR;
+use Illuminate\Support\Facades\Log;
 
 class ControladorEstudiante extends Controller
 {
     public function index(): View
     {
-        $estudiantes = Estudiante::paginate(10); // Pagination for 10 results per page
+        $estudiantes = Estudiante::paginate(10);
         return view('estudiantes.index', compact('estudiantes'));
     }
 
@@ -36,35 +34,25 @@ class ControladorEstudiante extends Controller
             'semestre' => 'required|string|max:255',
             'grupo' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:estudiantes',
+            'entrada' => 'nullable|date',
+            'salida' => 'nullable|date',
         ]);
 
-        // Create student record
-        $estudiante = Estudiante::create($validatedData);
-
-        // Handle Foto upload
         if ($request->hasFile('Foto')) {
             $imagen = $request->file('Foto');
-            $nombreImagen = time() . '_Estudiante' . $estudiante->identificador;
-            $rutaImagen = $imagen->storeAs('public/FotosEstudiantes', $nombreImagen);
-            $estudiante->update(['Foto'=> 'FotosEstudiantes/' . $nombreImagen]);
+            $nombreImagen = time() . '_' . $imagen->getClientOriginalName();
+            $rutaImagen = $imagen->move(public_path('FotosEstudiantes'), $nombreImagen);
+            $validatedData['Foto'] = 'FotosEstudiantes/' . $nombreImagen;
         }
 
-        // Handle QR Code
         if ($request->filled('qrCodeData')) {
             $qrCodeData = $request->input('qrCodeData');
-            $qrCodePath = $this->saveQRCode($qrCodeData, $estudiante->identificador);
-            $estudiante->update(['Fotoqr' => $qrCodePath]);
+            $qrCodePath = $this->saveQRCode($qrCodeData);
+            $validatedData['Fotoqr'] = $qrCodePath;
         }
 
-        // Send email with QR code attached
+        $estudiante = Estudiante::create($validatedData);
         $this->sendQRCodeByEmail($estudiante);
-
-        // Get new data
-        $newData = $request->all();
-
-        // Log the activity
-        $this->logEstudiantesActivity('Create', $request);
-        $this->logCentralizedActivity('estudiantes', 'Create', [], $newData);
 
         return redirect()->route('estudiantes.index')->with('flash_message', 'Estudiante dado de alta exitósamente!');
     }
@@ -83,9 +71,6 @@ class ControladorEstudiante extends Controller
 
     public function update(Request $request, Estudiante $estudiante): RedirectResponse
     {
-        // Get old data
-        $oldData = Estudiante::findOrFail($estudiante->id)->toArray();
-        
         $validatedData = $request->validate([
             'Fotoqr' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'Foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
@@ -95,144 +80,112 @@ class ControladorEstudiante extends Controller
             'semestre' => 'required|string|max:255',
             'grupo' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:estudiantes,email,' . $estudiante->id,
+            'entrada' => 'nullable|date',
+            'salida' => 'nullable|date',
         ]);
 
-        // Handle Foto upload
         if ($request->hasFile('Foto')) {
             $imagen = $request->file('Foto');
-            $nombreImagen = time() . '_Estudiante' . $estudiante->identificador;
-            $rutaImagen = $imagen->storeAs('public/FotosEstudiantes', $nombreImagen);
-            $estudiante->update(['Foto'=> 'FotosEstudiantes/' . $nombreImagen]);
+            $nombreImagen = time() . '_' . $imagen->getClientOriginalName();
+            $rutaImagen = $imagen->move(public_path('FotosEstudiantes'), $nombreImagen);
+            $validatedData['Foto'] = 'FotosEstudiantes/' . $nombreImagen;
         }
 
-        // Handle QR Code
         if ($request->filled('qrCodeData')) {
             $qrCodeData = $request->input('qrCodeData');
-            $qrCodePath = $this->saveQRCode($qrCodeData, $estudiante->identificador);
-            $estudiante->update(['Fotoqr' => $qrCodePath]);
+            $qrCodePath = $this->saveQRCode($qrCodeData);
+            $validatedData['Fotoqr'] = $qrCodePath;
         }
 
-        // Update student record
         $estudiante->update($validatedData);
-
-        // Send email with QR code attached
         $this->sendQRCodeByEmail($estudiante);
-
-        // Get new data
-        $newData = $request->all();
-
-        // Log the activity
-        $this->logEstudiantesActivity('Update', $request);
-        $this->logCentralizedActivity('estudiantes', 'Update', $oldData, $newData);
 
         return redirect()->route('estudiantes.index')->with('flash_message', 'Registro de estudiante actualizado exitósamente!');
     }
 
-    public function destroy($id): RedirectResponse
+    public function destroy($identificador): RedirectResponse
     {
-        $estudiante = Estudiante::findOrFail($id);
-        $oldData = $estudiante->toArray();
+        $estudiante = Estudiante::where('identificador', $identificador)->firstOrFail();
         $estudiante->delete();
-
-        // Log the activity
-        $this->logEstudiantesActivity('Delete', request());
-        $this->logCentralizedActivity('estudiantes', 'Delete', $oldData, []);
-
         return redirect()->route('estudiantes.index')->with('flash_message', 'Registro de estudiante eliminado exitósamente!');
     }
 
-    public function showEntradaForm($id): View
-    {
-        $estudiante = Estudiante::findOrFail($id);
-        return view('estudiantes.entrada', compact('estudiante'));
-    }
-
-    public function storeEntrada(Request $request, $id): RedirectResponse
-    {
-        // Get old data
-        $oldData = Estudiante::findOrFail($id)->toArray();
-        
-        $estudiante = Estudiante::findOrFail($id);
-        $estudiante->entrada = now();
-        $estudiante->save();
-
-        // Get new data
-        $newData = $request->all();
-
-        // Log the activity
-        $this->logEstudiantesActivity('Entrada', $request);
-        $this->logCentralizedActivity('estudiantes', 'Entrada', $oldData, $newData);
-
-        return redirect()->route('estudiantes.log')->with('flash_message', 'Entrada registrada exitósamente!');
-    }
-
-    public function showSalidaForm($id): View
-    {
-        $estudiante = Estudiante::findOrFail($id);
-        return view('estudiantes.salida', compact('estudiante'));
-    }
-
-    public function storeSalida(Request $request, $id): RedirectResponse
-    {
-        // Get old data
-        $oldData = Estudiante::findOrFail($id)->toArray();
-        
-        $estudiante = Estudiante::findOrFail($id);
-        $estudiante->salida = now();
-        $estudiante->save();
-
-        // Get new data
-        $newData = $request->all();
-        
-        // Log the activity
-        $this->logEstudiantesActivity('Salida', $request);
-        $this->logCentralizedActivity('estudiantes', 'Salida', $oldData, $newData);
-
-        return redirect()->route('estudiantes.log')->with('flash_message', 'Salida registrada exitósamente!');
-    }
-
-    protected function logEstudiantesActivity($action, $request)
-    {
-        EstudiantesLog::create([
-            'user_id'    => Auth::id(),
-            'user_email' => Auth::user()->email,
-            'action'     => $action,
-            'estudiante_id' => $request->input('identificador'), // Ensure this is set
-            'old_data'   => json_encode($request->except('_token')), // Adjust according to what data you want to log
-            'new_data'   => json_encode($request->all()),
-        ]);
-    }
-
-    protected function logCentralizedActivity($tableName, $action, $oldData, $newData)
-    {
-        Log::create([
-            'user_id' => Auth::id(),
-            'user_email' => Auth::user()->email,
-            'table_name' => $tableName,
-            'action' => $action,
-            'record_id' => $oldData['id'] ?? null, // Use record ID if available
-            'old_data' => $oldData,
-            'new_data' => $newData,
-        ]);
-    }
-
-    private function saveQRCode($qrCodeData, $identificador)
+    private function saveQRCode($qrCodeData)
     {
         $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $qrCodeData));
-        $qrCodePath = 'ImagenesQREstudiantes/' . time() . '_Estudiante' . $identificador . '.png';
+        $qrCodePath = 'ImagenesQREstudiantes/' . time() . '_qrcode.jpg';
         file_put_contents(public_path($qrCodePath), $imageData);
 
         return $qrCodePath;
     }
 
-    private function sendQRCodeByEmail($estudiante)
+    private function sendQRCodeByEmail(Estudiante $estudiante)
     {
-        Mail::to($estudiante->email)->send(new EstudianteQR($estudiante));
+        $email = $estudiante->email;
+        $domain = substr(strrchr($email, "@"), 1);
+
+        if ($domain === 'gmail.com' || $domain === 'googlemail.com') {
+            Mail::mailer('smtp')->to($email)->send(new EstudianteQR($estudiante->Fotoqr));
+        } elseif (in_array($domain, ['outlook.com', 'hotmail.com', 'live.com'])) {
+            Mail::mailer('smtp_outlook')->to($email)->send(new EstudianteQR($estudiante->Fotoqr));
+        } else {
+            Mail::to($email)->send(new EstudianteQR($estudiante->Fotoqr));
+        }
     }
 
-    public function log(): View
+    public function import(Request $request)
     {
-        $estudiantes = Estudiante::orderBy('updated_at', 'desc')->get();
-        return view('estudiantes.log', compact('estudiantes'));
+        // Validate the file
+        $request->validate([
+            'csv_file' => 'required|file|mimes:csv,txt'
+        ]);
+    
+        // Parse the CSV file
+        $file = $request->file('csv_file');
+        $data = $this->parseCSV($file->getRealPath());
+    
+        // Import data
+        foreach ($data as $row) {
+            // Check if the row has valid data
+            if (count($row) < 10) {
+                continue; // Skip rows with insufficient data
+            }
+    
+            Estudiante::updateOrCreate(
+                ['identificador' => $row[0]], // Unique identifier
+                [
+                    'Fotoqr' => $row[1],
+                    'Foto' => $row[2],
+                    'nombre' => $row[3],
+                    'apellidos' => $row[4],
+                    'semestre' => $row[5],
+                    'grupo' => $row[6],
+                    'email' => $row[7],
+                    'entrada' => $this->parseDatetime($row[8]),
+                    'salida' => $this->parseDatetime($row[9]),
+                ]
+            );
+        }
+    
+        return redirect()->route('estudiantes.index')->with('success', 'Estudiantes importados correctamente.');
     }
+    
+    private function parseDatetime($dateString)
+    {
+        // Handle empty or invalid datetime strings
+        return !empty($dateString) ? \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $dateString) : null;
+    }
+    
+    private function parseCSV($path)
+    {
+        $data = [];
+        if (($handle = fopen($path, 'r')) !== false) {
+            while (($row = fgetcsv($handle, 1000, ',')) !== false) {
+                $data[] = $row;
+            }
+            fclose($handle);
+        }
+        return $data;
+    }
+    
 }

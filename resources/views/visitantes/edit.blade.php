@@ -1,4 +1,5 @@
 @extends('visitantes.layout')
+
 @section('content')
 <div class="card">
     <div class="card-header">Editar Información de Visitante</div>
@@ -61,7 +62,6 @@
         </form>
     </div>
 </div>
-
 <!-- Include qrcode-generator library -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script>
 <script>

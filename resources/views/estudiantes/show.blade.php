@@ -1,7 +1,7 @@
 @extends('estudiantes.layout')
 
 @section('content')
-<div class="row mb-4">
+<div class="row">
     <div class="col-lg-6">
         <h2>Mostrar Información de Estudiante</h2>
     </div>
@@ -10,7 +10,7 @@
     </div>
 </div>
 
-<div class="row">
+<div class="row mt-4">
     <div class="col-lg-6">
         <table class="table table-bordered table-striped">
             <tr>
@@ -19,23 +19,11 @@
             </tr>
             <tr>
                 <th>Imagen de Código QR:</th>
-                <td>
-                    @if($estudiante->Fotoqr)
-                        <img src="{{ asset($estudiante->Fotoqr) }}" alt="Código QR de {{ $estudiante->nombre }}" width="100">
-                    @else
-                        No disponible
-                    @endif
-                </td>
+                <td><img src="{{ asset($estudiante->Fotoqr) }}" alt="Código QR de {{ $estudiante->nombre }}" width="100px"></td>
             </tr>
             <tr>
                 <th>Foto de Estudiante:</th>
-                <td>
-                    @if($estudiante->Foto)
-                        <img src="{{ asset($estudiante->Foto) }}" alt="Foto de {{ $estudiante->nombre }}" height="100" width="100">
-                    @else
-                        No disponible
-                    @endif
-                </td>
+                <td><img src="{{ asset($estudiante->Foto) }}" alt="Foto de {{ $estudiante->nombre }}" height="100px" width="100px"></td>
             </tr>
             <tr>
                 <th>Nombre:</th>
@@ -56,6 +44,14 @@
             <tr>
                 <th>Email:</th>
                 <td>{{ $estudiante->email }}</td>
+            </tr>
+            <tr>
+                <th>Entrada:</th>
+                <td>{{ $estudiante->entrada }}</td>
+            </tr>
+            <tr>
+                <th>Salida:</th>
+                <td>{{ $estudiante->salida }}</td>
             </tr>
         </table>
     </div>

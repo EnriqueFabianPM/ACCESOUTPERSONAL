@@ -3,30 +3,35 @@
 namespace App\Http\Controllers;
 
 use App\Models\Visitante;
-use App\Models\VisitantesLog;
-use App\Models\Log; // Import the centralized log model
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Auth; // Import Auth facade
 use App\Mail\VisitanteQR;
-use Illuminate\Support\Facades\DB;
 
 class ControladorVisitante extends Controller
 {
+    /**
+     * Display a listing of the resource.
+     */
     public function index(): View
     {
         $visitantes = Visitante::paginate(10);
         return view('visitantes.index', compact('visitantes'));
     }
 
+    /**
+     * Show the form for creating a new resource.
+     */
     public function create(): View
     {
         return view('visitantes.create');
     }
 
+    /**
+     * Store a newly created resource in storage.
+     */
     public function store(Request $request): RedirectResponse
     {
         $validatedData = $request->validate([
@@ -36,39 +41,47 @@ class ControladorVisitante extends Controller
             'motivo' => 'required|string|max:255',
             'telefono' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:visitantes',
+            'entrada' => 'nullable|date',
+            'salida' => 'nullable|date',
         ]);
 
+        // Create visitante record
         $visitante = Visitante::create($validatedData);
 
+        // Save QR code if provided
         if ($request->filled('qrCodeData')) {
             $qrCodeData = $request->input('qrCodeData');
-            $qrCodePath = $this->saveQRCode($qrCodeData, $visitante->identificador);
+            $qrCodePath = $this->saveQRCode($qrCodeData);
             $visitante->update(['Fotoqr' => $qrCodePath]);
         }
 
+        // Send email with QR code attached
         $this->sendQRCodeByEmail($visitante);
 
-        $visitante->save();
-        
-        // Log the activity
-        $this->logVisitantesActivity('Create', $request);
-        $this->logCentralizedActivity('visitantes', 'Create', [], $request->all());
-
-        return redirect()->route('visitantes.index')->with('flash_message', 'Visitante dado de alta exitósamente!');
+        return redirect()->route('visitantes.index')->with('flash_message', 'Visitante dado de alta exitosamente!');
     }
 
+    /**
+     * Display the specified resource.
+     */
     public function show($identificador): View
     {
         $visitante = Visitante::where('identificador', $identificador)->firstOrFail();
         return view('visitantes.show', compact('visitante'));
     }
 
+    /**
+     * Show the form for editing the specified resource.
+     */
     public function edit($identificador): View
     {
         $visitante = Visitante::where('identificador', $identificador)->firstOrFail();
         return view('visitantes.edit', compact('visitante'));
     }
 
+    /**
+     * Update the specified resource in storage.
+     */
     public function update(Request $request, Visitante $visitante): RedirectResponse
     {
         $validatedData = $request->validate([
@@ -78,93 +91,62 @@ class ControladorVisitante extends Controller
             'motivo' => 'required|string|max:255',
             'telefono' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:visitantes,email,' . $visitante->id,
+            'entrada' => 'nullable|date',
+            'salida' => 'nullable|date',
         ]);
 
+        // Update visitante record
+        $visitante->update($validatedData);
+
+        // Save QR code if provided
         if ($request->filled('qrCodeData')) {
             $qrCodeData = $request->input('qrCodeData');
-            $qrCodePath = $this->saveQRCode($qrCodeData, $visitante->identificador);
+            $qrCodePath = $this->saveQRCode($qrCodeData);
             $visitante->update(['Fotoqr' => $qrCodePath]);
         }
 
-        $oldData = $visitante->toArray();
-        $visitante->update($validatedData);
-
+        // Send email with QR code attached
         $this->sendQRCodeByEmail($visitante);
-        
-        // Log the activity
-        $this->logVisitantesActivity('Update', $request);
-        $this->logCentralizedActivity('visitantes', 'Update', $oldData, $request->all());
 
         return redirect()->route('visitantes.index')->with('flash_message', 'Registro de visitante actualizado exitosamente!');
     }
 
+    /**
+     * Remove the specified resource from storage.
+     */
     public function destroy($identificador): RedirectResponse
     {
         $visitante = Visitante::where('identificador', $identificador)->firstOrFail();
-        $oldData = $visitante->toArray();
         $visitante->delete();
-
-        // Log the activity
-        $this->logVisitantesActivity('Delete', request());
-        $this->logCentralizedActivity('visitantes', 'Delete', $oldData, []);
-
         return redirect()->route('visitantes.index')->with('flash_message', 'Registro de visitante eliminado exitosamente!');
     }
 
-    // Show Entry Form for Visitor
-    public function showEntradaForm($id)
+    /**
+     * Save QR code image to public directory.
+     */
+    private function saveQRCode($qrCodeData)
     {
-        $visitante = Visitante::findOrFail($id);
-        return view('visitantes.entrada', compact('visitante'));
+        $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $qrCodeData));
+        $qrCodePath = 'ImagenesQRVisitantes/' . time() . '_qrcode.jpg';
+        file_put_contents(public_path($qrCodePath), $imageData);
+
+        return $qrCodePath;
     }
 
-    // Store Entry Data for Visitor
-    public function storeEntrada(Request $request, $id)
+    /**
+     * Send QR code to visitante's email address.
+     */
+    private function sendQRCodeByEmail(Visitante $visitante)
     {
-        $visitante = Visitante::findOrFail($id);
-        $visitante->entrada = now();
-        $visitante->save();
+        $email = $visitante->email;
+        $domain = substr(strrchr($email, "@"), 1);
 
-        // Create log entry
-        Log::create([
-            'user_id' => $visitante->id,
-            'user_type' => 'Visitante',
-            'action' => 'Entrada',
-            'timestamp' => now(),
-        ]);
-
-        return redirect()->route('InicioGuardia')->with('flash_message', 'Entrada registrada exitosamente!');
+        if ($domain === 'gmail.com' || $domain === 'googlemail.com') {
+            Mail::mailer('smtp')->to($email)->send(new VisitanteQR($visitante->Fotoqr));
+        } elseif (in_array($domain, ['outlook.com', 'hotmail.com', 'live.com'])) {
+            Mail::mailer('smtp_outlook')->to($email)->send(new VisitanteQR($visitante->Fotoqr));
+        } else {
+            Mail::to($email)->send(new VisitanteQR($visitante->Fotoqr));
+        }
     }
-
-    // Show Exit Form for Visitor
-    public function showSalidaForm($id)
-    {
-        $visitante = Visitante::findOrFail($id);
-        return view('visitantes.salida', compact('visitante'));
-    }
-
-    // Store Exit Data for Visitor
-    public function storeSalida(Request $request, $id)
-    {
-        $visitante = Visitante::findOrFail($id);
-        $visitante->salida = now();
-        $visitante->save();
-
-        // Create log entry
-        Log::create([
-            'user_id' => $visitante->id,
-            'user_type' => 'Visitante',
-            'action' => 'Salida',
-            'timestamp' => now(),
-        ]);
-
-        return redirect()->route('InicioGuardia')->with('flash_message', 'Salida registrada exitosamente!');
-    }
-    
-    public function log(): View
-    {
-        $logs = Log::where('table', 'visitantes')->paginate(10); // Adjust as needed
-        return view('visitantes.logs', compact('logs'));
-    }
-
 }

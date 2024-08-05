@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('Fotoqr')->nullable();
             $table->string('Foto')->nullable();
-            $table->unsignedBigInteger('identificador');
+            $table->string('identificador')->unique();
             $table->string('nombre');
             $table->string('apellidos');
             $table->string('semestre');

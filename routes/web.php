@@ -6,13 +6,19 @@ use App\Http\Controllers\ControladorEmpleado;
 use App\Http\Controllers\ControladorVisitante;
 use App\Http\Controllers\ControladorEscaner;
 use App\Http\Controllers\ControladorGuardia;
-use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Auth;
 
 // Main welcome page
 Route::get('/', function () {
     return view('welcome');
-})->name('Inicio');
+})->name('home');
+
+// Página principal del guardia
+Route::get('/InicioGuardia', function () {
+    return view('InicioGuardia');
+})->name('InicioGuardia');
+
+Route::post('estudiantes/import', [ControladorEstudiante::class, 'import'])->name('estudiantes.import');
 
 // Authentication routes
 Auth::routes();
@@ -42,25 +48,50 @@ Route::get('/visitantes/log', [ControladorVisitante::class, 'log'])->name('visit
 Route::post('/register-entrada/{type}', [ControladorGuardia::class, 'registerEntrada'])->name('register.entrada');
 Route::post('/register-salida/{type}', [ControladorGuardia::class, 'registerSalida'])->name('register.salida');
 
-// Custom show routes
-Route::get('/estudiantes/show/{identificador}', [ControladorEstudiante::class, 'show'])->name('estudiantes.show');
-Route::get('/empleados/show/{identificador}', [ControladorEmpleado::class, 'show'])->name('empleados.show');
-Route::get('/visitantes/show/{identificador}', [ControladorVisitante::class, 'show'])->name('visitantes.show');
-
-// Custom edit routes
-Route::get('/estudiantes/edit/{identificador}', [ControladorEstudiante::class, 'edit'])->name('estudiantes.edit');
-Route::get('/empleados/edit/{identificador}', [ControladorEmpleado::class, 'edit'])->name('empleados.edit');
-Route::get('/visitantes/edit/{identificador}', [ControladorVisitante::class, 'edit'])->name('visitantes.edit');
-
-// Custom delete routes
-Route::delete('/estudiantes/{identificador}', [ControladorEstudiante::class, 'destroy'])->name('estudiantes.destroy');
-Route::delete('/empleados/{identificador}', [ControladorEmpleado::class, 'destroy'])->name('empleados.destroy');
-Route::delete('/visitantes/{identificador}', [ControladorVisitante::class, 'destroy'])->name('visitantes.destroy');
-
-// Resourceful routes for CRUD operations
+// Rutas de estudiantes
+Route::get('estudiantes/entrada', [ControladorEstudiante::class, 'showEntradaForm'])->name('estudiantes.showEntradaForm');
+Route::post('estudiantes/entrada/{identificador}', [ControladorEstudiante::class, 'storeEntrada'])->name('estudiantes.storeEntrada');
+Route::get('estudiantes/salida', [ControladorEstudiante::class, 'showSalidaForm'])->name('estudiantes.showSalidaForm');
+Route::post('estudiantes/salida/{identificador}', [ControladorEstudiante::class, 'storeSalida'])->name('estudiantes.storeSalida');
 Route::resource('estudiantes', ControladorEstudiante::class)->except(['show', 'edit', 'destroy']);
-Route::resource('empleados', ControladorEmpleado::class)->except(['show', 'edit', 'destroy']);
-Route::resource('visitantes', ControladorVisitante::class)->except(['show', 'edit', 'destroy']);
+Route::get('estudiantes/show/{identificador}', [ControladorEstudiante::class, 'show'])->name('estudiantes.show');
+Route::get('estudiantes/edit/{identificador}', [ControladorEstudiante::class, 'edit'])->name('estudiantes.edit');
+Route::delete('estudiantes/{identificador}', [ControladorEstudiante::class, 'destroy'])->name('estudiantes.destroy');
 
-// Home route
-Route::get('/home', [HomeController::class, 'index'])->name('home');
+// Rutas de empleados
+Route::get('empleados/entrada', [ControladorEmpleado::class, 'showEntradaForm'])->name('empleados.showEntradaForm');
+Route::post('empleados/entrada/{identificador}', [ControladorEmpleado::class, 'storeEntrada'])->name('empleados.storeEntrada');
+Route::get('empleados/salida', [ControladorEmpleado::class, 'showSalidaForm'])->name('empleados.showSalidaForm');
+Route::post('empleados/salida/{identificador}', [ControladorEmpleado::class, 'storeSalida'])->name('empleados.storeSalida');
+Route::resource('empleados', ControladorEmpleado::class)->except(['show', 'edit', 'destroy']);
+Route::get('empleados/show/{identificador}', [ControladorEmpleado::class, 'show'])->name('empleados.show');
+Route::get('empleados/edit/{identificador}', [ControladorEmpleado::class, 'edit'])->name('empleados.edit');
+Route::delete('empleados/{identificador}', [ControladorEmpleado::class, 'destroy'])->name('empleados.destroy');
+
+
+// Rutas de visitantes
+Route::get('visitantes/entrada', [ControladorVisitante::class, 'showEntradaForm'])->name('visitantes.showEntradaForm');
+Route::post('visitantes/entrada/{identificador}', [ControladorVisitante::class, 'storeEntrada'])->name('visitantes.storeEntrada');
+Route::get('visitantes/salida', [ControladorVisitante::class, 'showSalidaForm'])->name('visitantes.showSalidaForm');
+Route::post('visitantes/salida/{identificador}', [ControladorVisitante::class, 'storeSalida'])->name('visitantes.storeSalida');
+Route::resource('visitantes', ControladorVisitante::class)->except(['show', 'edit', 'destroy']);
+Route::get('visitantes/show/{identificador}', [ControladorVisitante::class, 'show'])->name('visitantes.show');
+Route::get('visitantes/edit/{identificador}', [ControladorVisitante::class, 'edit'])->name('visitantes.edit');
+Route::delete('visitantes/{identificador}', [ControladorVisitante::class, 'destroy'])->name('visitantes.destroy');
+
+// Admin routes with middleware
+Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', function () {
+        if (!auth()->user()->is_admin) {
+            abort(403, 'Unauthorized');
+        }
+        return view('admin.dashboard');
+    })->name('dashboard');
+    
+    Route::get('/settings', function () {
+        if (!auth()->user()->is_admin) {
+            abort(403, 'Unauthorized');
+        }
+        return view('admin.settings');
+    })->name('settings');
+});

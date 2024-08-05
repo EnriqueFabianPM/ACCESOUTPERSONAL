@@ -1,4 +1,5 @@
 @extends('empleados.layout')
+
 @section('content')
 <div class="card">
     <div class="card-header">Registrar Nuevo Empleado</div>
@@ -33,6 +34,14 @@
             <div class="form-group">
                 <label for="email">E-mail: <span class="text-danger">*</span></label>
                 <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="entrada">Entrada</label>
+                <input type="date" class="form-control" id="entrada" name="entrada">
+            </div>
+            <div class="form-group">
+                <label for="salida">Salida</label>
+                <input type="date" class="form-control" id="salida" name="salida">
             </div>
             <div class="form-group">
                 <h1> Codigo QR</h1>

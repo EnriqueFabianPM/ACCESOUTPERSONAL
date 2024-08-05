@@ -33,7 +33,7 @@
 
                     if (scannedData) {
                         // Construct the URL to handle the scan
-                        const url = `{{ route('scan.handle', ['qrCode' => '']) }}${encodeURIComponent(scannedData)}`;
+                        const url = `{{ route('scanner', ['qrCode' => '']) }}${encodeURIComponent(scannedData)}`;
                         window.location.href = url;
                     } else {
                         alert('Error: Código QR inválido, por favor ingrese nuevamente.');

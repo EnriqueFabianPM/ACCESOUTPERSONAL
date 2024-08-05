@@ -43,8 +43,18 @@
             </div>
 
             <div class="form-group">
-                <h1>Código QR</h1>
-                <button type="button" id="generateQR" class="btn btn-primary" disabled>Generar QR Code</button>
+                <label for="entrada">Entrada</label>
+                <input type="datetime-local" class="form-control" id="entrada" name="entrada">
+            </div>
+
+            <div class="form-group">
+                <label for="salida">Salida</label>
+                <input type="datetime-local" class="form-control" id="entrada" name="entrada">
+            </div>
+
+            <div class="form-group">
+                <h1> Codigo QR</h1>
+                <button type="button" id="generateQR" class="btn btn-primary">Generar QR Code</button>
             </div>
             <!-- QR Code Display Area -->
             <div id="qrCodeDisplay" class="mb-3"></div>            

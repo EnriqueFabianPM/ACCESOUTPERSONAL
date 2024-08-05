@@ -6,7 +6,7 @@
             <div class="card">
                 <div class="card-header">
                     <h2>Sistema de Registro de Empleados UTSC</h2>
-                    <center><a href="{{ route('Inicio') }}" style="background-color: #010201; padding: 10px;" class="btn btn-primary btn-lg mr-3">Volver al Inicio</a></center>
+                    <center><a href="{{ route('home') }}" style="background-color: #010201; padding: 10px;" class="btn btn-primary btn-lg mr-3">Volver al Inicio</a></center>
                 </div>
                 <div class="card-body">
                     <a href="{{ route('empleados.create') }}" class="btn btn-success btn-sm mb-3"
@@ -26,6 +26,8 @@
                                     <th>Area de Trabajo</th>
                                     <th>Telefono</th>
                                     <th>Email</th>
+                                    <th>Entrada</th>
+                                    <th>Salida</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -52,6 +54,8 @@
                                     <td>{{ $empleado->areatrabajo }}</td>
                                     <td>{{ $empleado->telefono }}</td>
                                     <td>{{ $empleado->email }}</td>
+                                    <td>{{ $empleado->entrada }}</td>
+                                    <td>{{ $empleado->salida }}</td>
                                     <td>
                                         <a href="{{ route('empleados.show', $empleado->identificador) }}"
                                             class="btn btn-info btn-sm" title="Ver Empleado">
