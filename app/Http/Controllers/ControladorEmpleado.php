@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Empleado;
+use App\Models\EmpleadosLog;
+use App\Models\Log; // Import the centralized log model
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Auth; // Import Auth facade
 use App\Mail\EmpleadoQR;
 
 class ControladorEmpleado extends Controller
@@ -34,21 +38,28 @@ class ControladorEmpleado extends Controller
             'email' => 'required|string|email|max:255|unique:empleados',
         ]);
 
+        $empleado = Empleado::create($validatedData);
+
         if ($request->hasFile('Foto')) {
             $imagen = $request->file('Foto');
-            $nombreImagen = time() . '_' . $imagen->getClientOriginalName();
-            $rutaImagen = $imagen->move(public_path('FotosEmpleados'), $nombreImagen);
-            $validatedData['Foto'] = 'FotosEmpleados/' . $nombreImagen;
+            $nombreImagen = time() . '_Empleado' . $empleado->identificador;
+            $rutaImagen = $imagen->storeAs('public/FotosEmpleados', $nombreImagen);
+            $empleado->update(['Foto' => 'FotosEmpleados/' . $nombreImagen]);
         }
 
         if ($request->filled('qrCodeData')) {
             $qrCodeData = $request->input('qrCodeData');
-            $qrCodePath = $this->saveQRCode($qrCodeData);
-            $validatedData['Fotoqr'] = $qrCodePath;
+            $qrCodePath = $this->saveQRCode($qrCodeData, $empleado->identificador);
+            $empleado->update(['Fotoqr' => $qrCodePath]);
         }
 
-        $empleado = Empleado::create($validatedData);
         $this->sendQRCodeByEmail($empleado);
+
+        $empleado->save();
+
+        // Log the activity
+        $this->logEmpleadosActivity('Create', $request);
+        $this->logCentralizedActivity('empleados', 'Create', [], $request->all());
 
         return redirect()->route('empleados.index')->with('flash_message', 'Empleado dado de alta exitósamente!');
     }
@@ -68,7 +79,6 @@ class ControladorEmpleado extends Controller
     public function update(Request $request, Empleado $empleado): RedirectResponse
     {
         $validatedData = $request->validate([
-            'Fotoqr' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'Foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'identificador' => 'required|string|max:255',
             'nombre' => 'required|string|max:255',
@@ -80,52 +90,40 @@ class ControladorEmpleado extends Controller
 
         if ($request->hasFile('Foto')) {
             $imagen = $request->file('Foto');
-            $nombreImagen = time() . '_' . $imagen->getClientOriginalName();
-            $rutaImagen = $imagen->move(public_path('FotosEmpleados'), $nombreImagen);
-            $validatedData['Foto'] = 'FotosEmpleados/' . $nombreImagen;
+            $nombreImagen = time() . '_Empleado' . $empleado->identificador;
+            $rutaImagen = $imagen->storeAs('public/FotosEmpleados', $nombreImagen);
+            $empleado->update(['Foto' => 'FotosEmpleados/' . $nombreImagen]);
         }
 
         if ($request->filled('qrCodeData')) {
             $qrCodeData = $request->input('qrCodeData');
-            $qrCodePath = $this->saveQRCode($qrCodeData);
-            $validatedData['Fotoqr'] = $qrCodePath;
+            $qrCodePath = $this->saveQRCode($qrCodeData, $empleado->identificador);
+            $empleado->update(['Fotoqr' => $qrCodePath]);
         }
 
-        $empleado->update($validatedData);
         $this->sendQRCodeByEmail($empleado);
+        
+        $oldData = $empleado->toArray();
+        $empleado->update($validatedData);
 
-        return redirect()->route('empleados.index')->with('flash_message', 'Registro de empleado actualizado exitósamente!');
+        // Log the activity
+        $this->logEmpleadosActivity('Update', $request);
+        $this->logCentralizedActivity('empleados', 'Update', $oldData, $request->all());
+
+        return redirect()->route('empleados.index')->with('flash_message', 'Registro de empleado actualizado exitosamente!');
     }
 
     public function destroy($identificador): RedirectResponse
     {
         $empleado = Empleado::where('identificador', $identificador)->firstOrFail();
+        $oldData = $empleado->toArray();
         $empleado->delete();
 
-        return redirect()->route('empleados.index')->with('flash_message', 'Registro de empleado eliminado exitósamente!');
-    }
+        // Log the activity
+        $this->logEmpleadosActivity('Delete', request());
+        $this->logCentralizedActivity('empleados', 'Delete', $oldData, []);
 
-    private function saveQRCode($qrCodeData)
-    {
-        $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $qrCodeData));
-        $qrCodePath = 'ImagenesQREmpleados/' . time() . '_qrcode.jpg';
-        file_put_contents(public_path($qrCodePath), $imageData);
-
-        return $qrCodePath;
-    }
-
-    private function sendQRCodeByEmail(Empleado $empleado)
-    {
-        $email = $empleado->email;
-        $domain = substr(strrchr($email, "@"), 1);
-
-        if ($domain === 'gmail.com' || $domain === 'googlemail.com') {
-            Mail::mailer('smtp')->to($email)->send(new EmpleadoQR($empleado->Fotoqr));
-        } elseif (in_array($domain, ['outlook.com', 'hotmail.com', 'live.com'])) {
-            Mail::mailer('smtp_outlook')->to($email)->send(new EmpleadoQR($empleado->Fotoqr));
-        } else {
-            Mail::to($email)->send(new EmpleadoQR($empleado->Fotoqr));
-        }
+        return redirect()->route('empleados.index')->with('flash_message', 'Registro de empleado eliminado exitosamente!');
     }
 
     public function showEntradaForm($id): View
@@ -158,9 +156,57 @@ class ControladorEmpleado extends Controller
         return redirect()->route('empleados.log')->with('flash_message', 'Salida registrada exitósamente!');
     }
 
-    public function log(): View
+    protected function logEmpleadosActivity($action, $request)
     {
-        $empleados = Empleado::orderBy('updated_at', 'desc')->get();
-        return view('empleados.log', compact('empleados'));
+        EmpleadosLog::create([
+            'user_id'    => Auth::id(),
+            'user_email' => Auth::user()->email,
+            'action'     => $action,
+            'empleado_id' => $request->input('identificador'), // Ensure this is set
+            'old_data'   => json_encode($request->except('_token')), // Adjust according to what data you want to log
+            'new_data'   => json_encode($request->all()),
+        ]);
+    }
+
+    protected function logCentralizedActivity($tableName, $action, $oldData, $newData)
+    {
+        Log::create([
+            'user_id' => Auth::id(),
+            'user_email' => Auth::user()->email,
+            'table_name' => $tableName,
+            'action' => $action,
+            'record_id' => $oldData['id'] ?? null, // Use record ID if available
+            'old_data' => $oldData,
+            'new_data' => $newData,
+        ]);
+    }
+
+    private function saveQRCode($qrCodeData, $identificador)
+    {
+        $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $qrCodeData));
+        $qrCodePath = 'ImagenesQREmpleados/' . time() . '_Empleado' . $identificador . '_qrcode.jpg';
+        file_put_contents(public_path($qrCodePath), $imageData);
+
+        return $qrCodePath;
+    }
+
+    private function sendQRCodeByEmail(Empleado $empleado)
+    {
+        $email = $empleado->email;
+        $domain = substr(strrchr($email, "@"), 1);
+
+        if ($domain === 'gmail.com' || $domain === 'googlemail.com') {
+            Mail::mailer('smtp')->to($email)->send(new EmpleadoQR($empleado));
+        } elseif (in_array($domain, ['outlook.com', 'hotmail.com', 'live.com'])) {
+            Mail::mailer('smtp_outlook')->to($email)->send(new EmpleadoQR($empleado));
+        } else {
+            Mail::to($email)->send(new EmpleadoQR($empleado));
+        }
+    }
+
+    public function log()
+    {
+        $logs = Log::where('table', 'empleados')->paginate(10); // Adjust as needed
+        return view('empleados.logs', compact('logs'));
     }
 }

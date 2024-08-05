@@ -23,19 +23,13 @@ class ControladorGuardia extends Controller
         return view('scanner');
     }
 
-    // Show logs for all types (students, employees, visitors)
-    public function allLogs(): View
-    {
-        $estudiantesLogs = Estudiante::orderBy('updated_at', 'desc')->get();
-        $empleadosLogs = Empleado::orderBy('updated_at', 'desc')->get();
-        $visitantesLogs = Visitante::orderBy('updated_at', 'desc')->get();
-
-        return view('logs.all', compact('estudiantesLogs', 'empleadosLogs', 'visitantesLogs'));
-    }
-
     // Register entry for students, employees, and visitors by ID
     public function registerEntrada(Request $request, $type): RedirectResponse
     {
+        $this->validate($request, [
+            'id' => 'required|integer|exists:' . $this->getTableByType($type) . ',id',
+        ]);
+
         $id = $request->input('id');
         $model = $this->getModelByType($type);
 
@@ -49,6 +43,10 @@ class ControladorGuardia extends Controller
     // Register exit for students, employees, and visitors by ID
     public function registerSalida(Request $request, $type): RedirectResponse
     {
+        $this->validate($request, [
+            'id' => 'required|integer|exists:' . $this->getTableByType($type) . ',id',
+        ]);
+
         $id = $request->input('id');
         $model = $this->getModelByType($type);
 
@@ -69,6 +67,21 @@ class ControladorGuardia extends Controller
                 return Empleado::class;
             case 'visitante':
                 return Visitante::class;
+            default:
+                abort(404, 'Tipo no válido');
+        }
+    }
+
+    // Helper method to get the table name based on type
+    private function getTableByType($type)
+    {
+        switch ($type) {
+            case 'estudiante':
+                return 'estudiantes';
+            case 'empleado':
+                return 'empleados';
+            case 'visitante':
+                return 'visitantes';
             default:
                 abort(404, 'Tipo no válido');
         }
