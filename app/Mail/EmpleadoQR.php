@@ -21,7 +21,7 @@ class EmpleadoQR extends Mailable
     public function __construct($qrImagePath)
     {
         $this->qrImagePath = $qrImagePath;
-    }
+    } 
 
     /**
      * Build the message.
