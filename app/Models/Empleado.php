@@ -22,4 +22,9 @@ class Empleado extends Model
         'salida',
     ];
     use HasFactory;
+
+    public function logs()
+    {
+        return $this->morphMany(Log::class, 'user');
+    }
 }

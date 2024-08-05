@@ -12,6 +12,7 @@ use Illuminate\View\View;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth; // Import Auth facade
 use App\Mail\VisitanteQR;
+use Illuminate\Support\Facades\DB;
 
 class ControladorVisitante extends Controller
 {
@@ -110,86 +111,60 @@ class ControladorVisitante extends Controller
         return redirect()->route('visitantes.index')->with('flash_message', 'Registro de visitante eliminado exitosamente!');
     }
 
-    public function showEntradaForm($id): View
+    // Show Entry Form for Visitor
+    public function showEntradaForm($id)
     {
         $visitante = Visitante::findOrFail($id);
         return view('visitantes.entrada', compact('visitante'));
     }
 
-    public function storeEntrada(Request $request, $id): RedirectResponse
+    // Store Entry Data for Visitor
+    public function storeEntrada(Request $request, $id)
     {
         $visitante = Visitante::findOrFail($id);
         $visitante->entrada = now();
         $visitante->save();
 
-        return redirect()->route('visitantes.log')->with('flash_message', 'Entrada registrada exitósamente!');
+        // Create log entry
+        Log::create([
+            'user_id' => $visitante->id,
+            'user_type' => 'Visitante',
+            'action' => 'Entrada',
+            'timestamp' => now(),
+        ]);
+
+        return redirect()->route('InicioGuardia')->with('flash_message', 'Entrada registrada exitosamente!');
     }
 
-    public function showSalidaForm($id): View
+    // Show Exit Form for Visitor
+    public function showSalidaForm($id)
     {
         $visitante = Visitante::findOrFail($id);
         return view('visitantes.salida', compact('visitante'));
     }
 
-    public function storeSalida(Request $request, $id): RedirectResponse
+    // Store Exit Data for Visitor
+    public function storeSalida(Request $request, $id)
     {
         $visitante = Visitante::findOrFail($id);
         $visitante->salida = now();
         $visitante->save();
 
-        return redirect()->route('visitantes.log')->with('flash_message', 'Salida registrada exitósamente!');
-    }
-
-    protected function logVisitantesActivity($action, $request)
-    {
-        VisitantesLog::create([
-            'user_id'    => Auth::id(),
-            'user_email' => Auth::user()->email,
-            'action'     => $action,
-            'visitante_id' => $request->input('identificador'), // Ensure this is set
-            'old_data'   => json_encode($request->except('_token')), // Adjust according to what data you want to log
-            'new_data'   => json_encode($request->all()),
-        ]);
-    }
-
-    protected function logCentralizedActivity($tableName, $action, $oldData, $newData)
-    {
+        // Create log entry
         Log::create([
-            'user_id' => Auth::id(),
-            'user_email' => Auth::user()->email,
-            'table_name' => $tableName,
-            'action' => $action,
-            'record_id' => $oldData['id'] ?? null, // Use record ID if available
-            'old_data' => $oldData,
-            'new_data' => $newData,
+            'user_id' => $visitante->id,
+            'user_type' => 'Visitante',
+            'action' => 'Salida',
+            'timestamp' => now(),
         ]);
+
+        return redirect()->route('InicioGuardia')->with('flash_message', 'Salida registrada exitosamente!');
     }
-
-    private function saveQRCode($qrCodeData, $identificador)
-    {
-        $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $qrCodeData));
-        $qrCodePath = 'ImagenesQRVisitantes/' . time() . '_Visitante' . $identificador . '_qrcode.jpg';
-        file_put_contents(public_path($qrCodePath), $imageData);
-
-        return $qrCodePath;
-    }
-
-    private function sendQRCodeByEmail(Visitante $visitante)
-    {
-        $email = $visitante->email;
-        $domain = substr(strrchr($email, "@"), 1);
-
-        if ($domain === 'gmail.com' || $domain === 'googlemail.com') {
-            Mail::mailer('smtp')->to($email)->send(new VisitanteQR($visitante));
-        } elseif (in_array($domain, ['outlook.com', 'hotmail.com', 'live.com'])) {
-            Mail::mailer('smtp_outlook')->to($email)->send(new VisitanteQR($visitante));
-        } else {
-            Mail::to($email)->send(new VisitanteQR($visitante));
-        }
-    }
-    public function log()
+    
+    public function log(): View
     {
         $logs = Log::where('table', 'visitantes')->paginate(10); // Adjust as needed
         return view('visitantes.logs', compact('logs'));
     }
+
 }

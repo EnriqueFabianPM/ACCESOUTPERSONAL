@@ -126,46 +126,54 @@ class ControladorEmpleado extends Controller
         return redirect()->route('empleados.index')->with('flash_message', 'Registro de empleado eliminado exitosamente!');
     }
 
-    public function showEntradaForm($id): View
+    // Show Entry Form
+    public function showEntradaForm($id)
     {
         $empleado = Empleado::findOrFail($id);
         return view('empleados.entrada', compact('empleado'));
     }
 
-    public function storeEntrada(Request $request, $id): RedirectResponse
+    // Store Entry Data
+    public function storeEntrada(Request $request, $id)
     {
         $empleado = Empleado::findOrFail($id);
         $empleado->entrada = now();
         $empleado->save();
 
-        return redirect()->route('empleados.log')->with('flash_message', 'Entrada registrada exitósamente!');
+        // Create log entry
+        Log::create([
+            'user_id' => $empleado->id,
+            'user_type' => 'Empleado',
+            'action' => 'Entrada',
+            'timestamp' => now(),
+        ]);
+
+        return redirect()->route('InicioGuardia')->with('flash_message', 'Entrada registrada exitosamente!');
     }
 
-    public function showSalidaForm($id): View
+    // Show Exit Form
+    public function showSalidaForm($id)
     {
         $empleado = Empleado::findOrFail($id);
         return view('empleados.salida', compact('empleado'));
     }
 
-    public function storeSalida(Request $request, $id): RedirectResponse
+    // Store Exit Data
+    public function storeSalida(Request $request, $id)
     {
         $empleado = Empleado::findOrFail($id);
         $empleado->salida = now();
         $empleado->save();
 
-        return redirect()->route('empleados.log')->with('flash_message', 'Salida registrada exitósamente!');
-    }
-
-    protected function logEmpleadosActivity($action, $request)
-    {
-        EmpleadosLog::create([
-            'user_id'    => Auth::id(),
-            'user_email' => Auth::user()->email,
-            'action'     => $action,
-            'empleado_id' => $request->input('identificador'), // Ensure this is set
-            'old_data'   => json_encode($request->except('_token')), // Adjust according to what data you want to log
-            'new_data'   => json_encode($request->all()),
+        // Create log entry
+        Log::create([
+            'user_id' => $empleado->id,
+            'user_type' => 'Empleado',
+            'action' => 'Salida',
+            'timestamp' => now(),
         ]);
+
+        return redirect()->route('InicioGuardia')->with('flash_message', 'Salida registrada exitosamente!');
     }
 
     protected function logCentralizedActivity($tableName, $action, $oldData, $newData)

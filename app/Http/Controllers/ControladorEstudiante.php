@@ -230,9 +230,9 @@ class ControladorEstudiante extends Controller
         Mail::to($estudiante->email)->send(new EstudianteQR($estudiante));
     }
 
-    public function log()
+    public function log(): View
     {
-        $logs = Log::where('table', 'estudiantes')->paginate(10); // Adjust as needed
-        return view('estudiantes.logs', compact('logs'));
+        $estudiantes = Estudiante::orderBy('updated_at', 'desc')->get();
+        return view('estudiantes.log', compact('estudiantes'));
     }
 }

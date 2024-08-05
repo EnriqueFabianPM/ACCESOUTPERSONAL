@@ -1,46 +1,36 @@
 @extends('estudiantes.layout')
 
 @section('content')
-<div class="row mb-4">
+<div class="row">
     <div class="col-lg-6">
-        <h2>Registro de Actividades de Estudiantes</h2>
-    </div>
-    <div class="col-lg-6 text-end">
-        <a class="btn btn-primary" href="{{ route('estudiantes.index') }}">Volver al Registro</a>
+        <h2>Registro de Entradas y Salidas</h2>
     </div>
 </div>
 
-<div class="row">
-    <h1>Registros(Logs): </h1>
-
-    <!-- Table to display logs -->
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>ID de Usuario</th>
-                <th>Email de Usuario</th>
-                <th>Tabla (CRUD)</th>
-                <th>Accion Utilizada</th>
-                <th>Fecha / Hora</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($logs as $log)
-            <tr>
-                <td>{{ $log->id }}</td>
-                <td>{{ $log->email }}</td>
-                <td>{{ $log->table }}</td>
-                <td>{{ $log->action }}</td>
-                <td>{{ $log->created_at }}</td>
-            </tr>
-            @empty
+<div class="row mt-4">
+    <div class="col-lg-12">
+        <table class="table table-bordered table-striped">
+            <thead>
                 <tr>
-                    <td colspan="4" class="text-center">No hay registros.</td>
+                    <th>ID</th>
+                    <th>Usuario ID</th>
+                    <th>Tipo de Usuario</th>
+                    <th>Acción</th>
+                    <th>Fecha y Hora</th>
                 </tr>
-            @endforelse
-        </tbody>
-    </table>
-    <!-- Pagination links -->
-    {{ $logs->links() }}
+            </thead>
+            <tbody>
+                @foreach($estudiantes as $log)
+                <tr>
+                    <td>{{ $log->id }}</td>
+                    <td>{{ $log->user_id }}</td>
+                    <td>{{ $log->user_type }}</td>
+                    <td>{{ $log->action }}</td>
+                    <td>{{ $log->timestamp }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
 </div>
 @endsection

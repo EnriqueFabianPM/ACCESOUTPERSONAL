@@ -24,19 +24,16 @@
                     let scannedData = qrInput.value.trim();
                     console.log('Scanned Data:', scannedData); // For debugging purposes
 
-                    // Process the scanned data
+                    // Ensure the scanned data is in the format expected by the backend
                     scannedData = scannedData
-                        .replace(/>/g, ':')
-                        .replace(/&/g, '/')
-                        .replace(/^http:\/\//, 'http://')
-                        .replace(/^http>/, 'http://')
-                        .replace(/^http>&&/, 'http://');
+                        .replace(/[^a-zA-Z0-9:_-]/g, '') // Remove unwanted characters
+                        .trim();
 
                     console.log('Processed Data:', scannedData); // For debugging purposes
 
                     if (scannedData) {
-                        // Make sure the URL is correctly formatted
-                        const url = `{{ url('/scan') }}/${encodeURIComponent(scannedData)}`;
+                        // Construct the URL to handle the scan
+                        const url = `{{ route('scan.handle', ['qrCode' => '']) }}${encodeURIComponent(scannedData)}`;
                         window.location.href = url;
                     } else {
                         alert('Error: Código QR inválido, por favor ingrese nuevamente.');

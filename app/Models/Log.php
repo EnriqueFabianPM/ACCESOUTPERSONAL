@@ -6,23 +6,17 @@ use Illuminate\Database\Eloquent\Model;
 
 class Log extends Model
 {
-    // Define the fillable fields
+    protected $table = 'logs';
+
     protected $fillable = [
         'user_id',
-        'user_email',
-        'table_name', // The name of the table where the action occurred
+        'user_type',
         'action',
-        'record_id', // ID of the record being changed
-        'old_data',
-        'new_data',
+        'timestamp',
     ];
 
-    // Cast JSON fields to array
-    protected $casts = [
-        'old_data' => 'array',
-        'new_data' => 'array',
-    ];
-
-    // Optional: Define the table name if it doesn't follow Laravel's conventions
-    protected $table = 'logs';
+    public function user()
+    {
+        return $this->morphTo();
+    }
 }

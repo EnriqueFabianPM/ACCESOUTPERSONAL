@@ -26,14 +26,15 @@ class ControladorGuardia extends Controller
     // Register entry for students, employees, and visitors by ID
     public function registerEntrada(Request $request, $type): RedirectResponse
     {
-        $this->validate($request, [
-            'id' => 'required|integer|exists:' . $this->getTableByType($type) . ',id',
-        ]);
-
-        $id = $request->input('id');
+        $request->validate(['id' => 'required|integer']);
         $model = $this->getModelByType($type);
 
-        $record = $model::findOrFail($id);
+        $record = $model::find($request->input('id'));
+
+        if (!$record) {
+            return redirect()->route('inicio.guardias')->with('error', 'Registro no encontrado.');
+        }
+
         $record->entrada = now();
         $record->save();
 
@@ -43,14 +44,15 @@ class ControladorGuardia extends Controller
     // Register exit for students, employees, and visitors by ID
     public function registerSalida(Request $request, $type): RedirectResponse
     {
-        $this->validate($request, [
-            'id' => 'required|integer|exists:' . $this->getTableByType($type) . ',id',
-        ]);
-
-        $id = $request->input('id');
+        $request->validate(['id' => 'required|integer']);
         $model = $this->getModelByType($type);
 
-        $record = $model::findOrFail($id);
+        $record = $model::find($request->input('id'));
+
+        if (!$record) {
+            return redirect()->route('inicio.guardias')->with('error', 'Registro no encontrado.');
+        }
+
         $record->salida = now();
         $record->save();
 
@@ -72,18 +74,26 @@ class ControladorGuardia extends Controller
         }
     }
 
-    // Helper method to get the table name based on type
-    private function getTableByType($type)
+    public function handleScan(Request $request): RedirectResponse
     {
+        $request->validate([
+            'type' => 'required|in:estudiantes,empleados,visitantes',
+            'id' => 'required|integer',
+        ]);
+    
+        $type = $request->input('type');
+        $id = $request->input('id');
+    
+        // Determine the route based on the type
         switch ($type) {
-            case 'estudiante':
-                return 'estudiantes';
-            case 'empleado':
-                return 'empleados';
-            case 'visitante':
-                return 'visitantes';
+            case 'estudiantes':
+                return redirect()->route('estudiantes.entrada.form', ['id' => $id]);
+            case 'empleados':
+                return redirect()->route('empleados.entrada.form', ['id' => $id]);
+            case 'visitantes':
+                return redirect()->route('visitantes.entrada.form', ['id' => $id]);
             default:
-                abort(404, 'Tipo no válido');
+                return redirect()->route('InicioGuardia')->with('error', 'Tipo de registro inválido.');
         }
     }
 }
